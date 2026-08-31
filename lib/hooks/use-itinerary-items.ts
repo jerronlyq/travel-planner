@@ -73,6 +73,51 @@ export function useUpdateItineraryItem(dayId: string) {
   });
 }
 
+export function useReorderItineraryItems(dayId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (orderedIds: string[]) => {
+      const supabase = createClient();
+      const results = await Promise.all(
+        orderedIds.map((id, index) =>
+          supabase
+            .from("itinerary_items")
+            .update({ sort_order: index })
+            .eq("id", id)
+        )
+      );
+      const failed = results.find((r) => r.error);
+      if (failed?.error) throw failed.error;
+    },
+    onMutate: async (orderedIds: string[]) => {
+      await queryClient.cancelQueries({ queryKey: itemsQueryKey(dayId) });
+      const previous = queryClient.getQueryData<ItineraryItem[]>(
+        itemsQueryKey(dayId)
+      );
+      if (previous) {
+        const byId = new Map(previous.map((it) => [it.id, it]));
+        const next = orderedIds
+          .map((id, index) => {
+            const it = byId.get(id);
+            return it ? { ...it, sort_order: index } : null;
+          })
+          .filter((it): it is ItineraryItem => it !== null);
+        queryClient.setQueryData(itemsQueryKey(dayId), next);
+      }
+      return { previous };
+    },
+    onError: (_err, _orderedIds, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(itemsQueryKey(dayId), context.previous);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: itemsQueryKey(dayId) });
+    },
+  });
+}
+
 export function useDeleteItineraryItem(dayId: string) {
   const queryClient = useQueryClient();
 
