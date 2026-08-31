@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/select";
 import { ITEM_TYPE_LABELS } from "@/components/itinerary/ItemTypeIcon";
 import { CURRENCIES } from "@/lib/utils/currency";
+import { PlaceSearchInput } from "@/components/map/PlaceSearchInput";
+import { PhotoManager } from "@/components/photos/PhotoManager";
 import {
   useCreateItineraryItem,
   useDeleteItineraryItem,
@@ -108,6 +110,8 @@ function ItemEditorForm({
   const [notes, setNotes] = useState(item?.notes ?? "");
   const [locationName, setLocationName] = useState(item?.location_name ?? "");
   const [locationAddress, setLocationAddress] = useState(item?.location_address ?? "");
+  const [lat, setLat] = useState(item?.lat ?? null);
+  const [lng, setLng] = useState(item?.lng ?? null);
   const [allDay, setAllDay] = useState(item?.all_day ?? false);
   const [startTime, setStartTime] = useState(toLocalInputValue(item?.start_time ?? null));
   const [endTime, setEndTime] = useState(toLocalInputValue(item?.end_time ?? null));
@@ -131,6 +135,8 @@ function ItemEditorForm({
       notes: notes || null,
       location_name: locationName || null,
       location_address: locationAddress || null,
+      lat,
+      lng,
       all_day: allDay,
       start_time: allDay ? null : fromLocalInputValue(startTime),
       end_time: allDay ? null : fromLocalInputValue(endTime),
@@ -205,11 +211,20 @@ function ItemEditorForm({
 
           <div className="space-y-2">
             <Label htmlFor="location_name">Location</Label>
-            <Input
-              id="location_name"
-              placeholder="e.g. Shinjuku Gyoen"
+            <PlaceSearchInput
               value={locationName}
-              onChange={(e) => setLocationName(e.target.value)}
+              placeholder="Search for a place..."
+              onChange={(v) => {
+                setLocationName(v);
+                setLat(null);
+                setLng(null);
+              }}
+              onSelect={(result) => {
+                setLocationName(result.name);
+                setLocationAddress(result.fullAddress);
+                setLat(result.lat);
+                setLng(result.lng);
+              }}
             />
           </div>
 
@@ -309,6 +324,17 @@ function ItemEditorForm({
               onChange={(e) => setUrl(e.target.value)}
             />
           </div>
+
+          {item ? (
+            <div className="space-y-2">
+              <Label>Photos</Label>
+              <PhotoManager tripId={tripId} itemId={item.id} />
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Save this item first, then reopen it to add photos.
+            </p>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="notes">Notes</Label>

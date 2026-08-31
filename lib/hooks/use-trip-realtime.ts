@@ -43,6 +43,27 @@ export function useTripRealtime(tripId: string) {
         {
           event: "*",
           schema: "public",
+          table: "item_photos",
+          filter: `trip_id=eq.${tripId}`,
+        },
+        (payload) => {
+          const newRow = payload.new as { item_id?: string } | null;
+          const oldRow = payload.old as { item_id?: string } | null;
+          const itemIds = new Set(
+            [newRow?.item_id, oldRow?.item_id].filter(
+              (id): id is string => !!id
+            )
+          );
+          itemIds.forEach((itemId) => {
+            queryClient.invalidateQueries({ queryKey: ["item_photos", itemId] });
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
           table: "itinerary_days",
           filter: `trip_id=eq.${tripId}`,
         },
