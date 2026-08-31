@@ -14,7 +14,9 @@ export default async function TripsPage() {
     <div className="mx-auto w-full max-w-3xl flex-1 p-6">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Your trips</h1>
-        <Button render={<Link href="/trips/new" />}>New trip</Button>
+        <Button render={<Link href="/trips/new" />} nativeButton={false}>
+          New trip
+        </Button>
       </div>
 
       {trips && trips.length > 0 ? (
