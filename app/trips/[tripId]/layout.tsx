@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { TripTabs } from "@/components/trip/TripTabs";
+import { TripHeader } from "@/components/trip/TripHeader";
+import { TripNav } from "@/components/trip/TripNav";
+import { DayRail } from "@/components/trip/DayRail";
 import { TripRoleProvider } from "@/components/trip/TripRoleContext";
 import { TripRealtimeListener } from "@/components/trip/TripRealtimeListener";
 
@@ -23,7 +25,7 @@ export default async function TripLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [{ data: days }, { data: membership }] = await Promise.all([
+  const [{ data: daysData }, { data: membership }] = await Promise.all([
     supabase
       .from("itinerary_days")
       .select("id, date")
@@ -39,15 +41,24 @@ export default async function TripLayout({
       : Promise.resolve({ data: null }),
   ]);
 
+  const days = daysData ?? [];
+  const role = membership?.role ?? null;
+
   return (
-    <TripRoleProvider role={membership?.role ?? null}>
+    <TripRoleProvider role={role}>
       <TripRealtimeListener tripId={tripId} />
       <div className="flex flex-1 flex-col">
-        <header className="px-6 pt-6">
-          <h1 className="text-xl font-semibold">{trip.name}</h1>
-        </header>
-        <TripTabs tripId={tripId} days={days ?? []} />
-        <div className="flex-1">{children}</div>
+        <TripHeader
+          tripId={tripId}
+          name={trip.name}
+          destination={trip.destination}
+          startDate={trip.start_date}
+          endDate={trip.end_date}
+          isOwner={role === "owner"}
+        />
+        <TripNav tripId={tripId} firstDayId={days[0]?.id ?? null} />
+        <DayRail tripId={tripId} days={days} />
+        <div className="flex-1 pb-20 md:pb-0">{children}</div>
       </div>
     </TripRoleProvider>
   );
