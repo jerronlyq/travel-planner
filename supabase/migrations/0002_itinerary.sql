@@ -106,10 +106,11 @@ set search_path = public
 as $$
 declare
   _invite trip_invites%rowtype;
-  _caller_email citext;
+  -- auth.jwt() reads the claim off the caller's own session token, unlike
+  -- querying auth.users directly, which regular authenticated users (and
+  -- RLS policies, which run as that role) aren't granted access to.
+  _caller_email citext := auth.jwt() ->> 'email';
 begin
-  select email into _caller_email from auth.users where id = auth.uid();
-
   select * into _invite
   from trip_invites
   where token = _token and status = 'pending';
@@ -188,7 +189,7 @@ create policy "trip_invites_select_owner_or_invitee"
   on trip_invites for select
   using (
     trip_role(trip_id) = 'owner'
-    or email = (select email from auth.users where id = auth.uid())
+    or email = (auth.jwt() ->> 'email')
     or is_platform_admin()
   );
 
