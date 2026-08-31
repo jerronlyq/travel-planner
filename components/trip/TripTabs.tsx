@@ -16,6 +16,7 @@ export function TripTabs({ tripId, days }: { tripId: string; days: Day[] }) {
       href: `/trips/${tripId}/day/${day.id}`,
       label: formatDayLabel(day.date, i + 1),
     })),
+    { href: `/trips/${tripId}/members`, label: "Members" },
   ];
 
   return (

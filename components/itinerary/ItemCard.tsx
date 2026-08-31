@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { ItemTypeIcon } from "@/components/itinerary/ItemTypeIcon";
 import { formatTimeRange } from "@/lib/utils/dates";
 import { formatPrice } from "@/lib/utils/currency";
+import { cn } from "@/lib/utils";
 import type { Database } from "@/lib/types/database.types";
 
 type ItineraryItem = Database["public"]["Tables"]["itinerary_items"]["Row"];
@@ -13,7 +14,7 @@ export function ItemCard({
   onClick,
 }: {
   item: ItineraryItem;
-  onClick: () => void;
+  onClick?: () => void;
 }) {
   const time = formatTimeRange(item.start_time, item.end_time, item.all_day);
   const price = formatPrice(item.price_amount, item.price_currency);
@@ -21,7 +22,10 @@ export function ItemCard({
   return (
     <Card
       onClick={onClick}
-      className="cursor-pointer gap-2 py-4 transition-colors hover:bg-accent"
+      className={cn(
+        "gap-2 py-4 transition-colors",
+        onClick && "cursor-pointer hover:bg-accent"
+      )}
     >
       <CardContent className="px-4">
         <div className="flex items-start justify-between gap-3">

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ItemCard } from "@/components/itinerary/ItemCard";
 import { ItemEditorModal } from "@/components/itinerary/ItemEditorModal";
 import { useItineraryItems } from "@/lib/hooks/use-itinerary-items";
+import { useCanEdit } from "@/components/trip/TripRoleContext";
 import type { Database } from "@/lib/types/database.types";
 
 type ItineraryItem = Database["public"]["Tables"]["itinerary_items"]["Row"];
@@ -26,6 +27,7 @@ export function DayView({
   const { data: items } = useItineraryItems(dayId, initialItems);
   const [editorOpen, setEditorOpen] = useState(false);
   const [activeItem, setActiveItem] = useState<ItineraryItem | null>(null);
+  const canEdit = useCanEdit();
 
   function openCreate() {
     setActiveItem(null);
@@ -33,23 +35,30 @@ export function DayView({
   }
 
   function openEdit(item: ItineraryItem) {
+    if (!canEdit) return;
     setActiveItem(item);
     setEditorOpen(true);
   }
 
   return (
     <div className="mx-auto w-full max-w-2xl p-6">
-      <div className="mb-4 flex items-center justify-end">
-        <Button size="sm" onClick={openCreate}>
-          <Plus className="size-4" />
-          Add item
-        </Button>
-      </div>
+      {canEdit && (
+        <div className="mb-4 flex items-center justify-end">
+          <Button size="sm" onClick={openCreate}>
+            <Plus className="size-4" />
+            Add item
+          </Button>
+        </div>
+      )}
 
       {items.length > 0 ? (
         <div className="space-y-3">
           {items.map((item) => (
-            <ItemCard key={item.id} item={item} onClick={() => openEdit(item)} />
+            <ItemCard
+              key={item.id}
+              item={item}
+              onClick={canEdit ? () => openEdit(item) : undefined}
+            />
           ))}
         </div>
       ) : (
@@ -58,15 +67,17 @@ export function DayView({
         </div>
       )}
 
-      <ItemEditorModal
-        open={editorOpen}
-        onOpenChange={setEditorOpen}
-        tripId={tripId}
-        dayId={dayId}
-        createdBy={createdBy}
-        defaultCurrency={defaultCurrency}
-        item={activeItem}
-      />
+      {canEdit && (
+        <ItemEditorModal
+          open={editorOpen}
+          onOpenChange={setEditorOpen}
+          tripId={tripId}
+          dayId={dayId}
+          createdBy={createdBy}
+          defaultCurrency={defaultCurrency}
+          item={activeItem}
+        />
+      )}
     </div>
   );
 }
