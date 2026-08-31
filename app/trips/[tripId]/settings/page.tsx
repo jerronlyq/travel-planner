@@ -42,6 +42,7 @@ export default async function TripSettingsPage({
           start_date: trip.start_date,
           end_date: trip.end_date,
           timezone: trip.timezone,
+          country_code: trip.country_code,
           default_currency: trip.default_currency,
         }}
       />

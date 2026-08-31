@@ -55,6 +55,7 @@ export function ItemEditorModal({
   dayId,
   createdBy,
   defaultCurrency,
+  tripCountry,
   item,
 }: {
   open: boolean;
@@ -63,6 +64,7 @@ export function ItemEditorModal({
   dayId: string;
   createdBy: string;
   defaultCurrency: string;
+  tripCountry: string | null;
   item: ItineraryItem | null;
 }) {
   return (
@@ -81,6 +83,7 @@ export function ItemEditorModal({
             dayId={dayId}
             createdBy={createdBy}
             defaultCurrency={defaultCurrency}
+            tripCountry={tripCountry}
             item={item}
             onDone={() => onOpenChange(false)}
           />
@@ -95,6 +98,7 @@ function ItemEditorForm({
   dayId,
   createdBy,
   defaultCurrency,
+  tripCountry,
   item,
   onDone,
 }: {
@@ -102,6 +106,7 @@ function ItemEditorForm({
   dayId: string;
   createdBy: string;
   defaultCurrency: string;
+  tripCountry: string | null;
   item: ItineraryItem | null;
   onDone: () => void;
 }) {
@@ -231,6 +236,7 @@ function ItemEditorForm({
             <PlaceSearchInput
               value={locationName}
               placeholder="Search for a place..."
+              country={tripCountry}
               onChange={(v) => {
                 setLocationName(v);
                 setLat(null);

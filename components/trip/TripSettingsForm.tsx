@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PlaceSearchInput } from "@/components/map/PlaceSearchInput";
 
 type TripSettings = {
   id: string;
@@ -26,6 +27,7 @@ type TripSettings = {
   start_date: string | null;
   end_date: string | null;
   timezone: string | null;
+  country_code: string | null;
   default_currency: string;
 };
 
@@ -40,6 +42,10 @@ export function TripSettingsForm({ trip }: { trip: TripSettings }) {
 
   const [name, setName] = useState(trip.name);
   const [destination, setDestination] = useState(trip.destination ?? "");
+  const [countryCode, setCountryCode] = useState<string | null>(
+    trip.country_code
+  );
+  const [countryName, setCountryName] = useState<string | null>(null);
   const [description, setDescription] = useState(trip.description ?? "");
   const [startDate, setStartDate] = useState(trip.start_date ?? "");
   const [endDate, setEndDate] = useState(trip.end_date ?? "");
@@ -65,6 +71,7 @@ export function TripSettingsForm({ trip }: { trip: TripSettings }) {
       .update({
         name,
         destination: destination || null,
+        country_code: destination ? countryCode : null,
         description: description || null,
         start_date: startDate || null,
         end_date: endDate || null,
@@ -111,11 +118,36 @@ export function TripSettingsForm({ trip }: { trip: TripSettings }) {
 
       <div className="space-y-2">
         <Label htmlFor="destination">Destination</Label>
-        <Input
-          id="destination"
+        <PlaceSearchInput
           value={destination}
-          onChange={(e) => setDestination(e.target.value)}
+          placeholder="Search for a city or country..."
+          onChange={(v) => {
+            setDestination(v);
+            if (!v) {
+              setCountryCode(null);
+              setCountryName(null);
+            }
+          }}
+          onSelect={(result) => {
+            setDestination(result.fullAddress || result.name);
+            setCountryCode(result.countryCode);
+            setCountryName(result.countryName);
+          }}
         />
+        {countryCode ? (
+          <p className="text-muted-foreground text-xs">
+            Place search for items is limited to{" "}
+            <span className="text-foreground font-medium">
+              {countryName ?? countryCode}
+            </span>
+            . Clear the field to search worldwide.
+          </p>
+        ) : (
+          <p className="text-muted-foreground text-xs">
+            Pick a result from the list to limit item location search to that
+            country.
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-4">

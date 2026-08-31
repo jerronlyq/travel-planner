@@ -35,12 +35,14 @@ export function DayView({
   dayId,
   createdBy,
   defaultCurrency,
+  tripCountry,
   initialItems,
 }: {
   tripId: string;
   dayId: string;
   createdBy: string;
   defaultCurrency: string;
+  tripCountry: string | null;
   initialItems: ItineraryItem[];
 }) {
   const { data: items } = useItineraryItems(dayId, initialItems);
@@ -129,6 +131,7 @@ export function DayView({
           dayId={dayId}
           createdBy={createdBy}
           defaultCurrency={defaultCurrency}
+          tripCountry={tripCountry}
           item={activeItem}
         />
       )}

@@ -53,6 +53,7 @@ export type Database = {
           start_date: string | null;
           end_date: string | null;
           timezone: string | null;
+          country_code: string | null;
           cover_photo_path: string | null;
           default_currency: string;
           created_at: string;
@@ -67,6 +68,7 @@ export type Database = {
           start_date?: string | null;
           end_date?: string | null;
           timezone?: string | null;
+          country_code?: string | null;
           cover_photo_path?: string | null;
           default_currency?: string;
           created_at?: string;
@@ -81,6 +83,7 @@ export type Database = {
           start_date?: string | null;
           end_date?: string | null;
           timezone?: string | null;
+          country_code?: string | null;
           cover_photo_path?: string | null;
           default_currency?: string;
           created_at?: string;

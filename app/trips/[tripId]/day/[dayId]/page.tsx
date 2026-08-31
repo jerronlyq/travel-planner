@@ -14,7 +14,7 @@ export default async function DayPage({
 
   const { data: trip } = await supabase
     .from("trips")
-    .select("default_currency")
+    .select("*")
     .eq("id", tripId)
     .single();
 
@@ -32,6 +32,7 @@ export default async function DayPage({
       dayId={dayId}
       createdBy={user.id}
       defaultCurrency={trip.default_currency}
+      tripCountry={trip.country_code}
       initialItems={items ?? []}
     />
   );

@@ -10,11 +10,14 @@ export function PlaceSearchInput({
   onChange,
   onSelect,
   placeholder,
+  country,
 }: {
   value: string;
   onChange: (value: string) => void;
   onSelect: (result: GeocodeResult) => void;
   placeholder?: string;
+  // ISO 3166-1 alpha-2 — restricts suggestions to that country.
+  country?: string | null;
 }) {
   const [results, setResults] = useState<GeocodeResult[]>([]);
   const [open, setOpen] = useState(false);
@@ -27,12 +30,12 @@ export function PlaceSearchInput({
         setOpen(false);
         return;
       }
-      const found = await searchPlaces(value);
+      const found = await searchPlaces(value, { country });
       setResults(found);
       setOpen(found.length > 0);
     }, 300);
     return () => clearTimeout(timeout);
-  }, [value]);
+  }, [value, country]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {

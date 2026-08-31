@@ -18,11 +18,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PlaceSearchInput } from "@/components/map/PlaceSearchInput";
 
 export default function NewTripPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [destination, setDestination] = useState("");
+  const [countryCode, setCountryCode] = useState<string | null>(null);
+  const [countryName, setCountryName] = useState<string | null>(null);
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -52,6 +55,7 @@ export default function NewTripPage() {
         owner_id: user.id,
         name,
         destination: destination || null,
+        country_code: destination ? countryCode : null,
         description: description || null,
         start_date: startDate || null,
         end_date: endDate || null,
@@ -93,12 +97,31 @@ export default function NewTripPage() {
 
             <div className="space-y-2">
               <Label htmlFor="destination">Destination</Label>
-              <Input
-                id="destination"
-                placeholder="Tokyo, Japan"
+              <PlaceSearchInput
                 value={destination}
-                onChange={(e) => setDestination(e.target.value)}
+                placeholder="Search for a city or country..."
+                onChange={(v) => {
+                  setDestination(v);
+                  if (!v) {
+                    setCountryCode(null);
+                    setCountryName(null);
+                  }
+                }}
+                onSelect={(result) => {
+                  setDestination(result.fullAddress || result.name);
+                  setCountryCode(result.countryCode);
+                  setCountryName(result.countryName);
+                }}
               />
+              {countryCode && (
+                <p className="text-muted-foreground text-xs">
+                  Item location search will be limited to{" "}
+                  <span className="text-foreground font-medium">
+                    {countryName ?? countryCode}
+                  </span>
+                  .
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
