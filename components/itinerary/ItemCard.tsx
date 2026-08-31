@@ -49,12 +49,6 @@ export function ItemCard({
                 {item.notes}
               </p>
             )}
-
-            {item.booking_reference && (
-              <p className="mt-1 text-xs text-muted-foreground">
-                Confirmation: {item.booking_reference}
-              </p>
-            )}
           </div>
 
           <div className="shrink-0 text-right text-sm">

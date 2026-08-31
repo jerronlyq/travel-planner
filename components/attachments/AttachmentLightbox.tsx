@@ -2,21 +2,21 @@
 
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import type { ItemPhoto } from "@/lib/hooks/use-item-photos";
+import type { ItemAttachment } from "@/lib/hooks/use-item-attachments";
 
-export function PhotoLightbox({
-  photos,
+export function AttachmentLightbox({
+  images,
   index,
   onIndexChange,
   onClose,
 }: {
-  photos: ItemPhoto[];
+  images: ItemAttachment[];
   index: number;
   onIndexChange: (index: number) => void;
   onClose: () => void;
 }) {
-  const photo = photos[index];
-  if (!photo) return null;
+  const image = images[index];
+  if (!image) return null;
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -27,8 +27,8 @@ export function PhotoLightbox({
         <DialogTitle className="sr-only">Photo</DialogTitle>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={photo.url}
-          alt={photo.caption ?? ""}
+          src={image.url}
+          alt={image.caption ?? ""}
           className="max-h-full max-w-full rounded-lg object-contain"
         />
 
@@ -40,18 +40,18 @@ export function PhotoLightbox({
           <X className="size-4" />
         </button>
 
-        {photos.length > 1 && (
+        {images.length > 1 && (
           <>
             <button
               type="button"
-              onClick={() => onIndexChange((index - 1 + photos.length) % photos.length)}
+              onClick={() => onIndexChange((index - 1 + images.length) % images.length)}
               className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-background/80 p-2 hover:bg-background"
             >
               <ChevronLeft className="size-4" />
             </button>
             <button
               type="button"
-              onClick={() => onIndexChange((index + 1) % photos.length)}
+              onClick={() => onIndexChange((index + 1) % images.length)}
               className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-background/80 p-2 hover:bg-background"
             >
               <ChevronRight className="size-4" />

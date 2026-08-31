@@ -189,7 +189,6 @@ export type Database = {
           all_day: boolean;
           price_amount: number | null;
           price_currency: string | null;
-          booking_reference: string | null;
           url: string | null;
           sort_order: number;
           created_by: string;
@@ -212,7 +211,6 @@ export type Database = {
           all_day?: boolean;
           price_amount?: number | null;
           price_currency?: string | null;
-          booking_reference?: string | null;
           url?: string | null;
           sort_order?: number;
           created_by: string;
@@ -235,7 +233,6 @@ export type Database = {
           all_day?: boolean;
           price_amount?: number | null;
           price_currency?: string | null;
-          booking_reference?: string | null;
           url?: string | null;
           sort_order?: number;
           created_by?: string;
@@ -244,13 +241,15 @@ export type Database = {
         };
         Relationships: [];
       };
-      item_photos: {
+      item_attachments: {
         Row: {
           id: string;
           item_id: string;
           trip_id: string;
           storage_path: string;
           caption: string | null;
+          mime_type: string | null;
+          file_name: string | null;
           uploaded_by: string;
           sort_order: number;
           created_at: string;
@@ -261,6 +260,8 @@ export type Database = {
           trip_id: string;
           storage_path: string;
           caption?: string | null;
+          mime_type?: string | null;
+          file_name?: string | null;
           uploaded_by: string;
           sort_order?: number;
           created_at?: string;
@@ -271,6 +272,8 @@ export type Database = {
           trip_id?: string;
           storage_path?: string;
           caption?: string | null;
+          mime_type?: string | null;
+          file_name?: string | null;
           uploaded_by?: string;
           sort_order?: number;
           created_at?: string;

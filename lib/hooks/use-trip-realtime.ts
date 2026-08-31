@@ -43,7 +43,7 @@ export function useTripRealtime(tripId: string) {
         {
           event: "*",
           schema: "public",
-          table: "item_photos",
+          table: "item_attachments",
           filter: `trip_id=eq.${tripId}`,
         },
         (payload) => {
@@ -55,7 +55,9 @@ export function useTripRealtime(tripId: string) {
             )
           );
           itemIds.forEach((itemId) => {
-            queryClient.invalidateQueries({ queryKey: ["item_photos", itemId] });
+            queryClient.invalidateQueries({
+              queryKey: ["item_attachments", itemId],
+            });
           });
         }
       )

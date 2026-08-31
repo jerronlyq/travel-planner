@@ -2,13 +2,19 @@
 
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { ImagePlus, Loader2 } from "lucide-react";
+import { Paperclip, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useUploadPhoto } from "@/lib/hooks/use-item-photos";
+import { useUploadAttachment } from "@/lib/hooks/use-item-attachments";
 
-export function PhotoUploader({ tripId, itemId }: { tripId: string; itemId: string }) {
+export function AttachmentUploader({
+  tripId,
+  itemId,
+}: {
+  tripId: string;
+  itemId: string;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const upload = useUploadPhoto(tripId, itemId);
+  const upload = useUploadAttachment(tripId, itemId);
   const [uploadingCount, setUploadingCount] = useState(0);
 
   async function handleFiles(files: FileList | null) {
@@ -20,7 +26,9 @@ export function PhotoUploader({ tripId, itemId }: { tripId: string; itemId: stri
       try {
         await upload.mutateAsync(file);
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Failed to upload photo");
+        toast.error(
+          err instanceof Error ? err.message : "Failed to upload file"
+        );
       }
     }
 
@@ -35,7 +43,7 @@ export function PhotoUploader({ tripId, itemId }: { tripId: string; itemId: stri
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,application/pdf"
         multiple
         className="hidden"
         onChange={(e) => handleFiles(e.target.files)}
@@ -50,9 +58,9 @@ export function PhotoUploader({ tripId, itemId }: { tripId: string; itemId: stri
         {busy ? (
           <Loader2 className="size-4 animate-spin" />
         ) : (
-          <ImagePlus className="size-4" />
+          <Paperclip className="size-4" />
         )}
-        {busy ? "Uploading..." : "Add photos"}
+        {busy ? "Uploading..." : "Add photos or files"}
       </Button>
     </div>
   );

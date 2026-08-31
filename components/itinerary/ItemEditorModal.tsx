@@ -23,7 +23,9 @@ import {
 import { ITEM_TYPE_LABELS } from "@/components/itinerary/ItemTypeIcon";
 import { CURRENCIES } from "@/lib/utils/currency";
 import { PlaceSearchInput } from "@/components/map/PlaceSearchInput";
-import { PhotoManager } from "@/components/photos/PhotoManager";
+import { AttachmentManager } from "@/components/attachments/AttachmentManager";
+import { StagedAttachments } from "@/components/attachments/StagedAttachments";
+import { uploadItemAttachment } from "@/lib/hooks/use-item-attachments";
 import {
   useCreateItineraryItem,
   useDeleteItineraryItem,
@@ -119,8 +121,8 @@ function ItemEditorForm({
     item?.price_amount != null ? String(item.price_amount) : ""
   );
   const [priceCurrency, setPriceCurrency] = useState(item?.price_currency ?? defaultCurrency);
-  const [bookingReference, setBookingReference] = useState(item?.booking_reference ?? "");
   const [url, setUrl] = useState(item?.url ?? "");
+  const [stagedFiles, setStagedFiles] = useState<File[]>([]);
 
   const create = useCreateItineraryItem(dayId);
   const update = useUpdateItineraryItem(dayId);
@@ -142,7 +144,6 @@ function ItemEditorForm({
       end_time: allDay ? null : fromLocalInputValue(endTime),
       price_amount: priceAmount ? Number(priceAmount) : null,
       price_currency: priceAmount ? priceCurrency : null,
-      booking_reference: bookingReference || null,
       url: url || null,
     };
 
@@ -151,13 +152,29 @@ function ItemEditorForm({
         await update.mutateAsync({ id: item.id, ...payload });
         toast.success("Item updated");
       } else {
-        await create.mutateAsync({
+        const newItem = await create.mutateAsync({
           trip_id: tripId,
           day_id: dayId,
           created_by: createdBy,
           ...payload,
         });
-        toast.success("Item added");
+        if (stagedFiles.length > 0) {
+          const results = await Promise.allSettled(
+            stagedFiles.map((file) =>
+              uploadItemAttachment(tripId, newItem.id, file)
+            )
+          );
+          const failed = results.filter((r) => r.status === "rejected").length;
+          if (failed > 0) {
+            toast.error(
+              `Item added, but ${failed} file${failed > 1 ? "s" : ""} failed to upload`
+            );
+          } else {
+            toast.success("Item added");
+          }
+        } else {
+          toast.success("Item added");
+        }
       }
       onDone();
     } catch (err) {
@@ -306,15 +323,6 @@ function ItemEditorForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="booking_reference">Booking / confirmation number</Label>
-            <Input
-              id="booking_reference"
-              value={bookingReference}
-              onChange={(e) => setBookingReference(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="url">Link</Label>
             <Input
               id="url"
@@ -325,16 +333,14 @@ function ItemEditorForm({
             />
           </div>
 
-          {item ? (
-            <div className="space-y-2">
-              <Label>Photos</Label>
-              <PhotoManager tripId={tripId} itemId={item.id} />
-            </div>
-          ) : (
-            <p className="text-xs text-muted-foreground">
-              Save this item first, then reopen it to add photos.
-            </p>
-          )}
+          <div className="space-y-2">
+            <Label>Attachments</Label>
+            {item ? (
+              <AttachmentManager tripId={tripId} itemId={item.id} />
+            ) : (
+              <StagedAttachments files={stagedFiles} onChange={setStagedFiles} />
+            )}
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="notes">Notes</Label>
