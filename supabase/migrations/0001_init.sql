@@ -39,7 +39,7 @@ set search_path = public
 as $$
 begin
   insert into public.profiles (id, email, display_name)
-  values (
+  values ( 
     new.id,
     new.email,
     coalesce(new.raw_user_meta_data ->> 'display_name', split_part(new.email, '@', 1))
@@ -55,6 +55,11 @@ create trigger on_auth_user_created
 -- Regular users may only ever update their own non-privileged columns.
 -- is_platform_admin may only change if the caller is already an admin
 -- (enforced here rather than via column-level RLS, which is fiddly).
+-- auth.uid() is null for direct database access (SQL editor, service role,
+-- migrations) rather than an app request through Supabase Auth, so that
+-- path is left open — it's how the very first admin gets bootstrapped, and
+-- RLS already blocks any unauthenticated app request before this trigger
+-- would ever see it.
 create or replace function protect_admin_flag()
 returns trigger
 language plpgsql
@@ -63,7 +68,7 @@ set search_path = public
 as $$
 begin
   if new.is_platform_admin is distinct from old.is_platform_admin then
-    if not exists (
+    if auth.uid() is not null and not exists (
       select 1 from profiles where id = auth.uid() and is_platform_admin
     ) then
       raise exception 'only a platform admin may change is_platform_admin';
@@ -88,30 +93,6 @@ security definer
 set search_path = public
 as $$
   select coalesce((select is_platform_admin from profiles where id = auth.uid()), false)
-$$;
-
-create or replace function is_trip_member(_trip_id uuid)
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select exists (
-    select 1 from trip_members
-    where trip_id = _trip_id and user_id = auth.uid()
-  )
-$$;
-
-create or replace function trip_role(_trip_id uuid)
-returns text
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select role from trip_members
-  where trip_id = _trip_id and user_id = auth.uid()
 $$;
 
 -- profiles policies
@@ -166,6 +147,30 @@ create table trip_members (
 alter table trip_members enable row level security;
 
 create index trip_members_user_id_idx on trip_members (user_id);
+
+create or replace function is_trip_member(_trip_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from trip_members
+    where trip_id = _trip_id and user_id = auth.uid()
+  )
+$$;
+
+create or replace function trip_role(_trip_id uuid)
+returns text
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select role from trip_members
+  where trip_id = _trip_id and user_id = auth.uid()
+$$;
 
 -- Automatically add the creator as 'owner' when a trip is created.
 -- SECURITY DEFINER avoids the chicken-and-egg problem of needing to already
