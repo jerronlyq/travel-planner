@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { format, parseISO } from "date-fns";
 import { Plus } from "lucide-react";
 import {
   DndContext,
@@ -32,6 +33,8 @@ type ItineraryItem = Database["public"]["Tables"]["itinerary_items"]["Row"];
 export function DayView({
   tripId,
   dayId,
+  dayNumber,
+  dayDate,
   createdBy,
   defaultCurrency,
   tripCountry,
@@ -39,6 +42,8 @@ export function DayView({
 }: {
   tripId: string;
   dayId: string;
+  dayNumber: number;
+  dayDate: string;
   createdBy: string;
   defaultCurrency: string;
   tripCountry: string | null;
@@ -78,63 +83,79 @@ export function DayView({
     reorder.mutate(arrayMove(ids, oldIndex, newIndex));
   }
 
+  const parsed = parseISO(dayDate);
+
   return (
-    <div className="mx-auto w-full max-w-3xl px-6 py-7 md:px-8">
-      {canEdit && (
-        <div className="mb-6 flex items-center justify-end">
+    <div className="flex flex-col">
+      <header className="border-border flex items-start justify-between gap-4 border-b px-6 py-5 md:px-8">
+        <div>
+          <p className="eyebrow">
+            Day {String(dayNumber).padStart(2, "0")} ·{" "}
+            {format(parsed, "d MMMM yyyy")}
+          </p>
+          <h1 className="font-heading mt-0.5 text-[30px] leading-[1.05] font-medium tracking-[-0.02em] md:text-[38px]">
+            {format(parsed, "EEEE")}
+          </h1>
+        </div>
+        {canEdit && (
           <button
             type="button"
             onClick={openCreate}
-            className="bg-primary text-primary-foreground press inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[13px] font-semibold"
+            className="bg-primary text-primary-foreground press inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-4 text-[13px] font-semibold tracking-[0.02em]"
           >
             <Plus className="size-4" />
-            Add to this day
+            <span className="hidden sm:inline">Add to this day</span>
+            <span className="sm:hidden">Add</span>
           </button>
-        </div>
-      )}
+        )}
+      </header>
 
-      {items.length === 0 ? (
-        <div className="border-border rounded-[4px] border border-dashed px-6 py-16 text-center">
-          <p className="font-heading text-[20px]">Nothing planned for this day.</p>
-          {canEdit && (
-            <p className="text-muted-foreground mt-1 text-[13.5px]">
-              Add a stop and it drops onto the timeline.
+      <div className="px-6 py-7 md:px-8">
+        {items.length === 0 ? (
+          <div className="border-border rounded-[4px] border border-dashed px-6 py-16 text-center">
+            <p className="font-heading text-[20px]">
+              Nothing planned for this day.
             </p>
-          )}
-        </div>
-      ) : (
-        <div className="relative pl-[26px]">
-          <div className="dashed-rule-y absolute top-2 bottom-3 left-1 w-[1.5px]" />
-          {canEdit ? (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={items.map((it) => it.id)}
-                strategy={verticalListSortingStrategy}
+            {canEdit && (
+              <p className="text-muted-foreground mt-1 text-[13.5px]">
+                Add a stop and it drops onto the timeline.
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="relative pl-[26px]">
+            <div className="dashed-rule-y absolute top-2 bottom-3 left-1 w-[1.5px]" />
+            {canEdit ? (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
               >
-                <div className="flex flex-col gap-5">
-                  {items.map((item) => (
-                    <SortableItemCard
-                      key={item.id}
-                      item={item}
-                      onClick={() => openEdit(item)}
-                    />
-                  ))}
-                </div>
-              </SortableContext>
-            </DndContext>
-          ) : (
-            <div className="flex flex-col gap-5">
-              {items.map((item) => (
-                <TimelineItem key={item.id} item={item} />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+                <SortableContext
+                  items={items.map((it) => it.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="flex flex-col gap-5">
+                    {items.map((item) => (
+                      <SortableItemCard
+                        key={item.id}
+                        item={item}
+                        onClick={() => openEdit(item)}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            ) : (
+              <div className="flex flex-col gap-5">
+                {items.map((item) => (
+                  <TimelineItem key={item.id} item={item} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {canEdit && (
         <ItemEditorModal

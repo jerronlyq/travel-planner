@@ -262,11 +262,10 @@ export function TripMap({
         )}
       </Map>
 
-      {/* Day legend / filter */}
-      <div className="bg-background/90 absolute top-3 left-3 z-10 max-h-[60%] w-52 overflow-y-auto rounded-xl border p-1.5 text-xs shadow-md backdrop-blur">
-        <p className="text-muted-foreground px-2 py-1 font-medium">
-          Filter by day
-        </p>
+      {/* Day legend / filter — hidden when there's only one day to show */}
+      {(days.length > 1 || hasUnscheduled) && (
+      <div className="bg-background/90 border-border absolute top-3 left-3 z-10 max-h-[60%] w-52 overflow-y-auto rounded-[6px] border p-1.5 text-xs shadow-md backdrop-blur">
+        <p className="data-label px-2 py-1">Filter by day</p>
         <button
           type="button"
           onClick={() => setFilter("all")}
@@ -311,6 +310,7 @@ export function TripMap({
           </button>
         )}
       </div>
+      )}
 
       {visible.length === 0 && (
         <div className="bg-background/90 text-muted-foreground absolute top-3 left-1/2 z-10 -translate-x-1/2 rounded-full border px-3 py-1 text-xs shadow-md backdrop-blur">
