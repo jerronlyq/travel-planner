@@ -113,7 +113,7 @@ export default async function DayPage({
   }));
 
   return (
-    <div className="flex flex-col-reverse lg:grid lg:grid-cols-[1fr_400px]">
+    <div className="flex flex-col-reverse lg:grid lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_500px]">
       <DayView
         tripId={tripId}
         dayId={dayId}
@@ -133,6 +133,7 @@ export default async function DayPage({
           label: format(parseISO(day.date), "EEE, MMM d"),
         }}
         items={mapItems}
+        totalStops={(items ?? []).length}
       />
     </div>
   );

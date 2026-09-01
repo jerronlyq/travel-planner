@@ -107,7 +107,7 @@ export function TripMap({
         [minLng, minLat],
         [maxLng, maxLat],
       ],
-      { padding: 64, maxZoom: 14, duration }
+      { padding: 44, maxZoom: 15, duration }
     );
   }
 
