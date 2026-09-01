@@ -20,8 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ITEM_TYPE_LABELS } from "@/components/itinerary/ItemTypeIcon";
+import { ITEM_TYPE_LABELS, ItemTypeIcon } from "@/components/itinerary/ItemTypeIcon";
 import { CURRENCIES } from "@/lib/utils/currency";
+import { cn } from "@/lib/utils";
 import { PlaceSearchInput } from "@/components/map/PlaceSearchInput";
 import { AttachmentManager } from "@/components/attachments/AttachmentManager";
 import { StagedAttachments } from "@/components/attachments/StagedAttachments";
@@ -205,27 +206,6 @@ function ItemEditorForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1.5">
-            <Label htmlFor="type" className={LABEL}>
-              Type
-            </Label>
-            <Select
-              value={type}
-              onValueChange={(v) => v && setType(v as ItineraryItemType)}
-            >
-              <SelectTrigger id="type" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {ITEM_TYPES.map((t) => (
-                  <SelectItem key={t} value={t}>
-                    {ITEM_TYPE_LABELS[t]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
             <Label htmlFor="title" className={LABEL}>
               Title
             </Label>
@@ -236,6 +216,32 @@ function ItemEditorForm({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className={LABEL}>Type</Label>
+            <div className="flex flex-wrap gap-1.5">
+              {ITEM_TYPES.map((t) => {
+                const active = type === t;
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setType(t)}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-semibold transition-colors",
+                      active
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border text-muted-foreground hover:border-brand hover:text-foreground"
+                    )}
+                  >
+                    <ItemTypeIcon type={t} className="size-3.5" />
+                    {ITEM_TYPE_LABELS[t]}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="space-y-1.5">
