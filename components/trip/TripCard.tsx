@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { format, parseISO, isBefore } from "date-fns";
+import { CoverImage } from "@/components/trip/CoverImage";
 import type { Database } from "@/lib/types/database.types";
 
 type Trip = Database["public"]["Tables"]["trips"]["Row"];
@@ -31,12 +32,7 @@ export function TripCard({
         className={`${coverUrl ? "" : "stripe-photo"} shadow-lift relative h-[194px] overflow-hidden rounded-[3px]`}
       >
         {coverUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={coverUrl}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover"
-          />
+          <CoverImage src={coverUrl} blur={trip.cover_blur} />
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[oklch(0.3_0.05_50/0.45)]" />
 

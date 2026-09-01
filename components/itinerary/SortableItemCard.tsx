@@ -11,9 +11,15 @@ type ItineraryItem = Database["public"]["Tables"]["itinerary_items"]["Row"];
 export function SortableItemCard({
   item,
   onClick,
+  photos,
+  photoCount,
+  photoCredit,
 }: {
   item: ItineraryItem;
   onClick?: () => void;
+  photos?: string[];
+  photoCount?: number;
+  photoCredit?: string;
 }) {
   const {
     attributes,
@@ -38,7 +44,14 @@ export function SortableItemCard({
         {...attributes}
         {...listeners}
       />
-      <TimelineItem item={item} onClick={onClick} isDragging={isDragging} />
+      <TimelineItem
+        item={item}
+        onClick={onClick}
+        isDragging={isDragging}
+        photos={photos}
+        photoCount={photoCount}
+        photoCredit={photoCredit}
+      />
     </div>
   );
 }

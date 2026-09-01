@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Plus, Share2 } from "lucide-react";
+import { CoverImage } from "@/components/trip/CoverImage";
 import { formatDateRangeShort } from "@/lib/utils/dates";
 
 /**
@@ -15,6 +16,7 @@ export function TripHeader({
   dayCount,
   canEdit,
   coverUrl,
+  coverBlur,
 }: {
   tripId: string;
   name: string;
@@ -24,6 +26,7 @@ export function TripHeader({
   dayCount: number;
   canEdit: boolean;
   coverUrl?: string | null;
+  coverBlur?: string | null;
 }) {
   const dates = formatDateRangeShort(startDate, endDate);
   const kicker = [destination, dayCount > 0 ? `${dayCount} days` : null, dates]
@@ -34,14 +37,7 @@ export function TripHeader({
     <div
       className={`relative h-40 overflow-hidden md:h-[216px] ${coverUrl ? "" : "stripe-photo"}`}
     >
-      {coverUrl && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={coverUrl}
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-      )}
+      {coverUrl && <CoverImage src={coverUrl} blur={coverBlur} />}
       <div className="absolute inset-0 bg-gradient-to-b from-[oklch(0.28_0.05_50/0.15)] to-[oklch(0.28_0.05_50/0.66)]" />
 
       {!coverUrl && (

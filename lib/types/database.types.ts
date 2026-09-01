@@ -55,6 +55,7 @@ export type Database = {
           timezone: string | null;
           country_code: string | null;
           cover_photo_path: string | null;
+          cover_blur: string | null;
           default_currency: string;
           created_at: string;
           updated_at: string;
@@ -70,6 +71,7 @@ export type Database = {
           timezone?: string | null;
           country_code?: string | null;
           cover_photo_path?: string | null;
+          cover_blur?: string | null;
           default_currency?: string;
           created_at?: string;
           updated_at?: string;
@@ -85,6 +87,7 @@ export type Database = {
           timezone?: string | null;
           country_code?: string | null;
           cover_photo_path?: string | null;
+          cover_blur?: string | null;
           default_currency?: string;
           created_at?: string;
           updated_at?: string;

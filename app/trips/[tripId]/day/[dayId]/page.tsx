@@ -38,6 +38,59 @@ export default async function DayPage({
 
   const dayNumber = dayIndex + 1;
 
+  // Image attachments for this day's items -> up to 2 signed thumbs + a credit.
+  const itemIds = (items ?? []).map((it) => it.id);
+  const photosByItem: Record<
+    string,
+    { urls: string[]; count: number; credit: string | null }
+  > = {};
+  if (itemIds.length > 0) {
+    const { data: photoRows } = await supabase
+      .from("item_attachments")
+      .select("item_id, storage_path, uploaded_by")
+      .in("item_id", itemIds)
+      .like("mime_type", "image/%")
+      .order("sort_order", { ascending: true });
+
+    if (photoRows && photoRows.length > 0) {
+      const { data: signed } = await supabase.storage
+        .from("trip-photos")
+        .createSignedUrls(
+          photoRows.map((r) => r.storage_path),
+          3600
+        );
+      const urlByPath = new Map(
+        (signed ?? []).filter((s) => s.signedUrl).map((s) => [s.path, s.signedUrl])
+      );
+
+      const uploaderIds = [
+        ...new Set(photoRows.map((r) => r.uploaded_by).filter(Boolean)),
+      ];
+      const { data: profs } = uploaderIds.length
+        ? await supabase
+            .from("profiles")
+            .select("id, display_name, email")
+            .in("id", uploaderIds)
+        : { data: [] };
+      const nameById = new Map(
+        (profs ?? []).map((p) => [
+          p.id,
+          (p.display_name || p.email || "").split(" ")[0] || null,
+        ])
+      );
+
+      for (const r of photoRows) {
+        const entry =
+          photosByItem[r.item_id] ??
+          (photosByItem[r.item_id] = { urls: [], count: 0, credit: null });
+        entry.count += 1;
+        const url = urlByPath.get(r.storage_path);
+        if (url && entry.urls.length < 2) entry.urls.push(url);
+        if (!entry.credit) entry.credit = nameById.get(r.uploaded_by) ?? null;
+      }
+    }
+  }
+
   const located = (items ?? []).filter(
     (it) => it.lat !== null && it.lng !== null
   );
@@ -70,6 +123,7 @@ export default async function DayPage({
         defaultCurrency={trip.default_currency}
         tripCountry={trip.country_code}
         initialItems={items ?? []}
+        photosByItem={photosByItem}
       />
       <DayMapPanel
         tripId={tripId}

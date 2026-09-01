@@ -30,6 +30,8 @@ import type { Database } from "@/lib/types/database.types";
 
 type ItineraryItem = Database["public"]["Tables"]["itinerary_items"]["Row"];
 
+type PhotoData = { urls: string[]; count: number; credit: string | null };
+
 export function DayView({
   tripId,
   dayId,
@@ -39,6 +41,7 @@ export function DayView({
   defaultCurrency,
   tripCountry,
   initialItems,
+  photosByItem = {},
 }: {
   tripId: string;
   dayId: string;
@@ -48,6 +51,7 @@ export function DayView({
   defaultCurrency: string;
   tripCountry: string | null;
   initialItems: ItineraryItem[];
+  photosByItem?: Record<string, PhotoData>;
 }) {
   const { data: items } = useItineraryItems(dayId, initialItems);
   const reorder = useReorderItineraryItems(dayId);
@@ -136,21 +140,36 @@ export function DayView({
                   strategy={verticalListSortingStrategy}
                 >
                   <div className="flex flex-col gap-5">
-                    {items.map((item) => (
-                      <SortableItemCard
-                        key={item.id}
-                        item={item}
-                        onClick={() => openEdit(item)}
-                      />
-                    ))}
+                    {items.map((item) => {
+                      const p = photosByItem[item.id];
+                      return (
+                        <SortableItemCard
+                          key={item.id}
+                          item={item}
+                          onClick={() => openEdit(item)}
+                          photos={p?.urls}
+                          photoCount={p?.count}
+                          photoCredit={p?.credit ?? undefined}
+                        />
+                      );
+                    })}
                   </div>
                 </SortableContext>
               </DndContext>
             ) : (
               <div className="flex flex-col gap-5">
-                {items.map((item) => (
-                  <TimelineItem key={item.id} item={item} />
-                ))}
+                {items.map((item) => {
+                  const p = photosByItem[item.id];
+                  return (
+                    <TimelineItem
+                      key={item.id}
+                      item={item}
+                      photos={p?.urls}
+                      photoCount={p?.count}
+                      photoCredit={p?.credit ?? undefined}
+                    />
+                  );
+                })}
               </div>
             )}
           </div>

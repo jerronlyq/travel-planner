@@ -6,8 +6,11 @@ import imageCompression from "browser-image-compression";
 import { ImagePlus, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { downscaleJpeg, tinyBlurDataUrl } from "@/lib/utils/image";
 
 const BUCKET = "trip-photos";
+
+const thumbOf = (path: string) => path.replace(/\.jpg$/, "_thumb.jpg");
 
 export function CoverImageField({
   tripId,
@@ -33,21 +36,33 @@ export function CoverImageField({
         useWebWorker: true,
         fileType: "image/jpeg",
       });
-      const path = `${tripId}/cover/${crypto.randomUUID()}.jpg`;
+      const thumb = await downscaleJpeg(compressed, 640, 0.72);
+      const blur = await tinyBlurDataUrl(compressed, 24);
 
-      const { error: uploadError } = await supabase.storage
-        .from(BUCKET)
-        .upload(path, compressed, { contentType: "image/jpeg" });
-      if (uploadError) throw uploadError;
+      const id = crypto.randomUUID();
+      const path = `${tripId}/cover/${id}.jpg`;
+      const thumbPath = thumbOf(path);
+
+      const [{ error: fullErr }, { error: thumbErr }] = await Promise.all([
+        supabase.storage
+          .from(BUCKET)
+          .upload(path, compressed, { contentType: "image/jpeg" }),
+        supabase.storage
+          .from(BUCKET)
+          .upload(thumbPath, thumb, { contentType: "image/jpeg" }),
+      ]);
+      if (fullErr || thumbErr) throw fullErr ?? thumbErr;
 
       const { error: updateError } = await supabase
         .from("trips")
-        .update({ cover_photo_path: path })
+        .update({ cover_photo_path: path, cover_blur: blur })
         .eq("id", tripId);
       if (updateError) throw updateError;
 
       if (currentPath) {
-        await supabase.storage.from(BUCKET).remove([currentPath]);
+        await supabase.storage
+          .from(BUCKET)
+          .remove([currentPath, thumbOf(currentPath)]);
       }
 
       toast.success("Cover photo updated");
@@ -66,11 +81,13 @@ export function CoverImageField({
       const supabase = createClient();
       const { error } = await supabase
         .from("trips")
-        .update({ cover_photo_path: null })
+        .update({ cover_photo_path: null, cover_blur: null })
         .eq("id", tripId);
       if (error) throw error;
       if (currentPath) {
-        await supabase.storage.from(BUCKET).remove([currentPath]);
+        await supabase.storage
+          .from(BUCKET)
+          .remove([currentPath, thumbOf(currentPath)]);
       }
       toast.success("Cover photo removed");
       router.refresh();

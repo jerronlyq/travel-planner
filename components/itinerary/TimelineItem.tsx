@@ -28,12 +28,14 @@ export function TimelineItem({
   item,
   photoCount = 0,
   photoCredit,
+  photos,
   onClick,
   isDragging,
 }: {
   item: ItineraryItem;
   photoCount?: number;
   photoCredit?: string;
+  photos?: string[];
   onClick?: () => void;
   isDragging?: boolean;
 }) {
@@ -95,14 +97,35 @@ export function TimelineItem({
 
       {photoCount > 0 && (
         <div className="mt-2.5 flex items-end gap-2.5">
-          {/* Real thumbnails go here — same rotation, same drop shadow. */}
-          <div className="shadow-lift h-[78px] w-[116px] rotate-[-1.6deg] rounded-[2px] bg-[repeating-linear-gradient(38deg,oklch(0.68_0.09_195)_0_8px,oklch(0.62_0.1_192)_8px_16px)]" />
-          {photoCount > 1 && (
-            <div className="shadow-lift h-[78px] w-[116px] rotate-[1.2deg] rounded-[2px] bg-[repeating-linear-gradient(38deg,oklch(0.72_0.07_100)_0_8px,oklch(0.66_0.08_98)_8px_16px)]" />
-          )}
+          {[0, 1].map((i) => {
+            if (i === 1 && photoCount <= 1) return null;
+            const url = photos?.[i];
+            const rot = i === 0 ? "rotate-[-1.6deg]" : "rotate-[1.2deg]";
+            return url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={i}
+                src={url}
+                alt=""
+                className={cn(
+                  "shadow-lift h-[78px] w-[116px] shrink-0 rounded-[2px] object-cover",
+                  rot
+                )}
+              />
+            ) : (
+              <div
+                key={i}
+                className={cn(
+                  "shadow-lift h-[78px] w-[116px] shrink-0 rounded-[2px] bg-[repeating-linear-gradient(38deg,oklch(0.68_0.09_195)_0_8px,oklch(0.62_0.1_192)_8px_16px)]",
+                  rot
+                )}
+              />
+            );
+          })}
           <span className="font-mono text-muted-foreground flex items-center gap-1 text-[9px] tracking-[0.08em] uppercase">
             <Paperclip className="size-3" />
-            {photoCount} photos{photoCredit ? ` from ${photoCredit}` : ""}
+            {photoCount} {photoCount === 1 ? "photo" : "photos"}
+            {photoCredit ? ` from ${photoCredit}` : ""}
           </span>
         </div>
       )}

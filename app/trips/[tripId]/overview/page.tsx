@@ -25,9 +25,7 @@ export default async function TripOverviewPage({
 
   const { data: trip } = await supabase
     .from("trips")
-    .select(
-      "id, name, description, destination, start_date, end_date, cover_photo_path"
-    )
+    .select("*")
     .eq("id", tripId)
     .single();
 
@@ -109,6 +107,7 @@ export default async function TripOverviewPage({
         dayCount={days?.length ?? 0}
         canEdit={canEdit}
         coverUrl={coverSigned?.signedUrl ?? null}
+        coverBlur={trip.cover_blur}
       />
 
       <div className="mx-auto w-full max-w-5xl px-6 py-8 md:px-8">
