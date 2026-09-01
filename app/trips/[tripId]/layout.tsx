@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentProfile } from "@/lib/supabase/current-user";
+import { NavBar } from "@/components/layout/NavBar";
 import { TripSidebar } from "@/components/trip/TripSidebar";
 import { TripNav } from "@/components/trip/TripNav";
 import { DayRail } from "@/components/trip/DayRail";
@@ -57,9 +59,17 @@ export default async function TripLayout({
     (p.display_name || p.email || "?").charAt(0).toUpperCase()
   );
 
+  const profile = await getCurrentProfile();
+
   return (
     <TripRoleProvider role={role}>
       <TripRealtimeListener tripId={tripId} />
+      {/* Mobile only — desktop navigation lives in the sidebar */}
+      <div className="md:hidden">
+        <NavBar
+          displayName={profile?.display_name ?? profile?.email ?? "You"}
+        />
+      </div>
       <div className="flex flex-1 md:grid md:grid-cols-[232px_1fr]">
         <TripSidebar
           tripId={tripId}
