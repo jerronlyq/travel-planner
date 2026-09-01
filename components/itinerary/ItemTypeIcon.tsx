@@ -21,10 +21,12 @@ export const ITEM_TYPE_LABELS: Record<ItineraryItemType, string> = {
 export function ItemTypeIcon({
   type,
   className,
+  style,
 }: {
   type: ItineraryItemType;
   className?: string;
+  style?: React.CSSProperties;
 }) {
   const Icon = ICONS[type];
-  return <Icon className={cn("size-4", className)} />;
+  return <Icon className={cn("size-4", className)} style={style} />;
 }

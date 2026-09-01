@@ -1,66 +1,69 @@
 import Link from "next/link";
-import { ChevronLeft, MapPin, Settings } from "lucide-react";
+import { Plus, Share2 } from "lucide-react";
 import { formatDateRangeShort } from "@/lib/utils/dates";
 
+/**
+ * Editorial hero. Renders on the OVERVIEW tab only — the other tabs get their
+ * own mastheads so the photo does not repeat on every screen.
+ */
 export function TripHeader({
   tripId,
   name,
   destination,
   startDate,
   endDate,
-  isOwner,
+  dayCount,
+  canEdit,
 }: {
   tripId: string;
   name: string;
   destination: string | null;
   startDate: string | null;
   endDate: string | null;
-  isOwner: boolean;
+  dayCount: number;
+  canEdit: boolean;
 }) {
   const dates = formatDateRangeShort(startDate, endDate);
+  const kicker = [destination, dayCount > 0 ? `${dayCount} days` : null, dates]
+    .filter(Boolean)
+    .join(" — ");
 
   return (
-    <div className="relative overflow-hidden border-b">
-      <div
-        aria-hidden
-        className="from-primary/25 via-sky/20 to-primary/10 absolute inset-0 bg-gradient-to-r"
-      />
-      <div
-        aria-hidden
-        className="bg-background/40 absolute inset-0 backdrop-blur-[2px]"
-      />
-      <div className="relative mx-auto w-full max-w-5xl px-4 pt-3 pb-4 sm:px-6">
-        <Link
-          href="/trips"
-          className="text-muted-foreground hover:text-foreground -ml-1 inline-flex items-center gap-1 text-xs font-medium transition-colors"
-        >
-          <ChevronLeft className="size-3.5" />
-          All trips
-        </Link>
+    <div className="stripe-photo relative h-40 md:h-[216px]">
+      {/* Replace stripe-photo with the trip cover image once available. */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[oklch(0.28_0.05_50/0.15)] to-[oklch(0.28_0.05_50/0.66)]" />
 
-        <div className="mt-1.5 flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="font-heading truncate text-xl font-semibold tracking-tight sm:text-2xl">
-              {name}
-            </h1>
-            <div className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm">
-              {destination && (
-                <span className="inline-flex items-center gap-1">
-                  <MapPin className="size-3.5" />
-                  {destination}
-                </span>
-              )}
-              {dates && <span>{dates}</span>}
-            </div>
-          </div>
+      <span className="font-mono absolute top-4 right-8 hidden text-[9px] tracking-[0.08em] text-[oklch(0.97_0.01_85/0.8)] md:inline">
+        Photo — destination banner
+      </span>
 
-          {isOwner && (
+      <div className="absolute inset-x-4 bottom-5 flex items-end justify-between gap-5 sm:inset-x-8">
+        <div className="min-w-0 text-[oklch(0.98_0.01_85)]">
+          {kicker && (
+            <p className="font-mono text-[10px] tracking-[0.18em] uppercase opacity-85">
+              {kicker}
+            </p>
+          )}
+          <h1 className="font-heading mt-1.5 truncate text-[32px] leading-[1.02] font-medium tracking-[-0.025em] md:text-[52px]">
+            {name}
+          </h1>
+        </div>
+
+        <div className="flex shrink-0 gap-2">
+          <Link
+            href={`/trips/${tripId}/members`}
+            className="inline-flex h-9 items-center gap-[7px] rounded-full bg-[oklch(0.97_0.012_85)] px-[15px] text-[13px] font-semibold text-[oklch(0.35_0.04_50)] transition-transform duration-150 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-safe:hover:-translate-y-0.5"
+          >
+            <Share2 className="size-[15px]" />
+            <span className="hidden sm:inline">Share</span>
+          </Link>
+          {canEdit && (
             <Link
-              href={`/trips/${tripId}/settings`}
-              aria-label="Trip settings"
-              className="bg-background/70 text-muted-foreground hover:text-foreground hover:bg-background inline-flex size-8 shrink-0 items-center justify-center rounded-full border transition-colors"
+              href={`/trips/${tripId}`}
+              className="bg-brand inline-flex h-9 items-center gap-[7px] rounded-full px-[15px] text-[13px] font-semibold text-[oklch(0.98_0.01_85)] transition-transform duration-150 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-safe:hover:-translate-y-0.5"
             >
-              <Settings className="size-4" />
+              <Plus className="size-[15px]" />
+              <span className="hidden sm:inline">Add plan</span>
             </Link>
           )}
         </div>

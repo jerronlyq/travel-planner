@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { format, parseISO } from "date-fns";
-import { ArrowRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { TripHeader } from "@/components/trip/TripHeader";
 import { ItemTypeIcon } from "@/components/itinerary/ItemTypeIcon";
 import { formatDayShort } from "@/lib/utils/dates";
 import { formatPrice } from "@/lib/utils/currency";
@@ -24,13 +25,28 @@ export default async function TripOverviewPage({
   const { tripId } = await params;
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   const { data: trip } = await supabase
     .from("trips")
-    .select("id, description")
+    .select("id, name, description, destination, start_date, end_date")
     .eq("id", tripId)
     .single();
 
   if (!trip) notFound();
+
+  const { data: membership } = user
+    ? await supabase
+        .from("trip_members")
+        .select("role")
+        .eq("trip_id", tripId)
+        .eq("user_id", user.id)
+        .maybeSingle()
+    : { data: null };
+  const canEdit =
+    membership?.role === "owner" || membership?.role === "editor";
 
   const [{ data: days }, { data: items }] = await Promise.all([
     supabase
@@ -74,17 +90,32 @@ export default async function TripOverviewPage({
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-4 p-4 sm:p-6">
-      {trip.description && (
-        <p className="text-muted-foreground text-sm">{trip.description}</p>
-      )}
+    <div>
+      <TripHeader
+        tripId={tripId}
+        name={trip.name}
+        destination={trip.destination}
+        startDate={trip.start_date}
+        endDate={trip.end_date}
+        dayCount={days?.length ?? 0}
+        canEdit={canEdit}
+      />
 
-      {!days || days.length === 0 ? (
-        <div className="rounded-2xl border border-dashed p-12 text-center text-sm text-muted-foreground">
-          Set start and end dates in trip settings to generate day-by-day
-          planning.
-        </div>
-      ) : (
+      <div className="mx-auto w-full max-w-3xl space-y-4 px-6 py-7 md:px-8">
+        {trip.description && (
+          <p className="font-heading max-w-[52ch] text-[19px] leading-[1.4]">
+            {trip.description}
+          </p>
+        )}
+
+        {!days || days.length === 0 ? (
+          <div className="border-border rounded-[4px] border border-dashed px-6 py-16 text-center">
+            <p className="font-heading text-[20px]">No days yet.</p>
+            <p className="text-muted-foreground mt-1 text-[13.5px]">
+              Set start and end dates in trip settings to lay out the itinerary.
+            </p>
+          </div>
+        ) : (
         days.map((day, i) => {
           const list = itemsByDay.get(day.id) ?? [];
           const { weekday, day: dateLabel } = formatDayShort(day.date);
@@ -117,7 +148,7 @@ export default async function TripOverviewPage({
                           }`}
                     </p>
                   </div>
-                  <ArrowRight className="text-muted-foreground group-hover:text-primary size-4 shrink-0 transition-colors" />
+                  <ArrowUpRight className="text-muted-foreground group-hover:text-brand size-4 shrink-0 transition-colors" />
                 </div>
 
                 {list.length > 0 && (
@@ -174,7 +205,8 @@ export default async function TripOverviewPage({
             )}
           </ul>
         </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

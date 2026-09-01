@@ -2,8 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical } from "lucide-react";
-import { ItemCard } from "@/components/itinerary/ItemCard";
+import { TimelineItem } from "@/components/itinerary/TimelineItem";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/lib/types/database.types";
 
@@ -29,18 +28,17 @@ export function SortableItemCard({
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={cn("relative", isDragging && "z-10 opacity-80")}
+      className={cn("relative", isDragging && "z-10")}
     >
+      {/* Grab affordance sits over the timeline dot */}
       <button
         type="button"
         aria-label="Reorder item"
-        className="absolute top-1/2 -left-1 z-10 -translate-y-1/2 cursor-grab touch-none rounded p-1 text-muted-foreground opacity-40 transition-opacity hover:bg-accent hover:opacity-100 focus-visible:opacity-100 active:cursor-grabbing"
+        className="focus-visible:ring-ring/50 absolute top-0 -left-[32px] z-10 size-5 cursor-grab touch-none rounded-full outline-none focus-visible:ring-2 active:cursor-grabbing"
         {...attributes}
         {...listeners}
-      >
-        <GripVertical className="size-4" />
-      </button>
-      <ItemCard item={item} onClick={onClick} />
+      />
+      <TimelineItem item={item} onClick={onClick} isDragging={isDragging} />
     </div>
   );
 }

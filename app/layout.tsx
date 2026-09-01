@@ -1,29 +1,42 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Newsreader, Karla, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Editorial serif for names of things.
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
   subsets: ["latin"],
+  style: ["normal", "italic"],
+  weight: ["400", "500", "600"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// Karla for sentences.
+const karla = Karla({
+  variable: "--font-karla",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+// Mono for data: times, prices, labels, distances.
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
   title: "Wanderplan",
-  description: "A shared trip planner for you and your travel companions.",
+  description:
+    "Day-by-day itineraries, bookings and photos, shared with everyone on the trip.",
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f6f8ff" },
-    { media: "(prefers-color-scheme: dark)", color: "#14161f" },
+    { media: "(prefers-color-scheme: light)", color: "#f1e8d5" },
+    { media: "(prefers-color-scheme: dark)", color: "#211f1c" },
   ],
 };
 
@@ -32,12 +45,10 @@ const themeScript = `(function(){try{var t=localStorage.getItem('theme');var m=w
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="bg-background text-foreground flex min-h-full flex-col">
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${newsreader.variable} ${karla.variable} ${jetbrainsMono.variable} bg-background text-foreground flex min-h-dvh flex-col antialiased`}
+      >
         <Script id="theme-init" strategy="beforeInteractive">
           {themeScript}
         </Script>

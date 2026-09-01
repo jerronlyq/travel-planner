@@ -17,8 +17,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Button } from "@/components/ui/button";
-import { ItemCard } from "@/components/itinerary/ItemCard";
+import { TimelineItem } from "@/components/itinerary/TimelineItem";
 import { SortableItemCard } from "@/components/itinerary/SortableItemCard";
 import { ItemEditorModal } from "@/components/itinerary/ItemEditorModal";
 import {
@@ -80,46 +79,60 @@ export function DayView({
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl p-6">
+    <div className="mx-auto w-full max-w-3xl px-6 py-7 md:px-8">
       {canEdit && (
-        <div className="mb-4 flex items-center justify-end">
-          <Button size="sm" onClick={openCreate}>
+        <div className="mb-6 flex items-center justify-end">
+          <button
+            type="button"
+            onClick={openCreate}
+            className="bg-primary text-primary-foreground press inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[13px] font-semibold"
+          >
             <Plus className="size-4" />
-            Add item
-          </Button>
+            Add to this day
+          </button>
         </div>
       )}
 
       {items.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-12 text-center text-muted-foreground">
-          Nothing planned for this day yet.
+        <div className="border-border rounded-[4px] border border-dashed px-6 py-16 text-center">
+          <p className="font-heading text-[20px]">Nothing planned for this day.</p>
+          {canEdit && (
+            <p className="text-muted-foreground mt-1 text-[13.5px]">
+              Add a stop and it drops onto the timeline.
+            </p>
+          )}
         </div>
-      ) : canEdit ? (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={items.map((it) => it.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            <div className="space-y-3">
+      ) : (
+        <div className="relative pl-[26px]">
+          <div className="dashed-rule-y absolute top-2 bottom-3 left-1 w-[1.5px]" />
+          {canEdit ? (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={items.map((it) => it.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="flex flex-col gap-5">
+                  {items.map((item) => (
+                    <SortableItemCard
+                      key={item.id}
+                      item={item}
+                      onClick={() => openEdit(item)}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          ) : (
+            <div className="flex flex-col gap-5">
               {items.map((item) => (
-                <SortableItemCard
-                  key={item.id}
-                  item={item}
-                  onClick={() => openEdit(item)}
-                />
+                <TimelineItem key={item.id} item={item} />
               ))}
             </div>
-          </SortableContext>
-        </DndContext>
-      ) : (
-        <div className="space-y-3">
-          {items.map((item) => (
-            <ItemCard key={item.id} item={item} />
-          ))}
+          )}
         </div>
       )}
 

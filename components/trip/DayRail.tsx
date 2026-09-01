@@ -15,8 +15,8 @@ export function DayRail({ tripId, days }: { tripId: string; days: Day[] }) {
   if (days.length === 0) return null;
 
   return (
-    <div className="bg-background/80 sticky top-14 z-10 border-b backdrop-blur-md md:top-[6.5rem]">
-      <div className="mx-auto flex w-full max-w-5xl gap-2 overflow-x-auto px-4 py-2.5 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="bg-background/90 border-border sticky top-0 z-10 border-b backdrop-blur-md md:hidden">
+      <div className="flex w-full gap-2 overflow-x-auto px-4 py-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {days.map((day, i) => {
           const active = pathname === `/trips/${tripId}/day/${day.id}`;
           const { weekday, day: dayLabel } = formatDayShort(day.date);
@@ -25,15 +25,15 @@ export function DayRail({ tripId, days }: { tripId: string; days: Day[] }) {
               key={day.id}
               href={`/trips/${tripId}/day/${day.id}`}
               className={cn(
-                "flex shrink-0 flex-col items-center rounded-xl border px-3 py-1.5 text-center transition-colors",
+                "flex shrink-0 flex-col items-center rounded-[4px] border px-3 py-1.5 text-center transition-colors",
                 active
                   ? "border-primary bg-primary text-primary-foreground"
-                  : "hover:border-foreground/20 hover:bg-accent bg-card"
+                  : "hover:border-brand hover:bg-accent bg-card"
               )}
             >
               <span
                 className={cn(
-                  "text-[10px] font-semibold tracking-wide uppercase",
+                  "font-mono text-[9.5px] tracking-[0.12em] uppercase",
                   active ? "text-primary-foreground/80" : "text-muted-foreground"
                 )}
               >

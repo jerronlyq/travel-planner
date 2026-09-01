@@ -1,16 +1,10 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ExternalLink, FileText, MapPin } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ItemTypeIcon } from "@/components/itinerary/ItemTypeIcon";
-import { formatDayLabel, formatTimeRange } from "@/lib/utils/dates";
+import { BookingStub } from "@/components/trip/BookingStub";
 import { formatPrice } from "@/lib/utils/currency";
 import type { Database } from "@/lib/types/database.types";
 
 type ItineraryItem = Database["public"]["Tables"]["itinerary_items"]["Row"];
-
 type AttachmentLink = { id: string; fileName: string; url: string };
 
 export default async function TripBookingsPage({
@@ -42,7 +36,18 @@ export default async function TripBookingsPage({
       .order("sort_order", { ascending: true }),
   ]);
 
-  const bookingItems = (items ?? []) as ItineraryItem[];
+  const dayIndexById = new Map(
+    (days ?? []).map((day, i) => [day.id, i] as const)
+  );
+
+  const bookingItems = ((items ?? []) as ItineraryItem[])
+    .slice()
+    .sort((a, b) => {
+      const ai = a.day_id ? (dayIndexById.get(a.day_id) ?? 998) : 999;
+      const bi = b.day_id ? (dayIndexById.get(b.day_id) ?? 998) : 999;
+      if (ai !== bi) return ai - bi;
+      return (a.start_time ?? "~").localeCompare(b.start_time ?? "~");
+    });
 
   // Non-image attachments (booking PDFs / e-tickets) for these items.
   const attachmentsByItem = new Map<string, AttachmentLink[]>();
@@ -77,37 +82,6 @@ export default async function TripBookingsPage({
     }
   }
 
-  const dayIndexById = new Map(
-    (days ?? []).map((day, i) => [day.id, i] as const)
-  );
-
-  // Order groups by day date; unscheduled bookings sort last.
-  const groups = new Map<
-    string,
-    { label: string; order: number; items: ItineraryItem[] }
-  >();
-
-  for (const item of bookingItems) {
-    const dayIndex = item.day_id ? dayIndexById.get(item.day_id) : undefined;
-    const day = item.day_id
-      ? (days ?? []).find((d) => d.id === item.day_id)
-      : undefined;
-    const key = item.day_id ?? "unscheduled";
-    if (!groups.has(key)) {
-      groups.set(key, {
-        label:
-          day && dayIndex !== undefined
-            ? formatDayLabel(day.date, dayIndex + 1)
-            : "Unscheduled",
-        order: dayIndex ?? Number.MAX_SAFE_INTEGER,
-        items: [],
-      });
-    }
-    groups.get(key)!.items.push(item);
-  }
-
-  const orderedGroups = [...groups.values()].sort((a, b) => a.order - b.order);
-
   const totalsByCurrency = new Map<string, number>();
   for (const item of bookingItems) {
     if (item.price_amount === null) continue;
@@ -117,127 +91,59 @@ export default async function TripBookingsPage({
       (totalsByCurrency.get(currency) ?? 0) + item.price_amount
     );
   }
+  const totalLabel = [...totalsByCurrency.entries()]
+    .map(([c, a]) => formatPrice(a, c))
+    .filter(Boolean)
+    .join(" · ");
+
+  function dayLabelFor(item: ItineraryItem): string {
+    if (!item.day_id) return "No day";
+    const idx = dayIndexById.get(item.day_id);
+    return idx === undefined ? "No day" : `Day ${String(idx + 1).padStart(2, "0")}`;
+  }
 
   return (
-    <div className="mx-auto w-full max-w-2xl p-6">
-      {orderedGroups.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-12 text-center text-muted-foreground">
-          No bookings yet. Accommodation and transport items show up here.
+    <div className="mx-auto w-full max-w-3xl px-6 py-7 md:px-8">
+      <div className="border-border flex flex-wrap items-end justify-between gap-4 border-b pb-3.5">
+        <div>
+          <p className="eyebrow">
+            {bookingItems.length === 0
+              ? "Nothing booked yet"
+              : `${bookingItems.length} ${
+                  bookingItems.length === 1 ? "confirmation" : "confirmations"
+                } on file`}
+          </p>
+          <h1 className="font-heading mt-0.5 text-[34px] leading-[1.1] font-medium tracking-[-0.02em]">
+            Everything that&rsquo;s locked in
+          </h1>
+        </div>
+        {totalLabel && (
+          <p className="font-mono text-muted-foreground text-[11px] tracking-[0.1em] uppercase">
+            Paid / {totalLabel}
+          </p>
+        )}
+      </div>
+
+      {bookingItems.length === 0 ? (
+        <div className="border-border mt-7 rounded-[4px] border border-dashed px-6 py-16 text-center">
+          <p className="font-heading text-[20px]">Nothing booked yet.</p>
+          <p className="text-muted-foreground mt-1 text-[13.5px]">
+            Accommodation and transport items show up here as ticket stubs.
+          </p>
         </div>
       ) : (
-        <>
-          {totalsByCurrency.size > 0 && (
-            <div className="mb-6 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm text-muted-foreground">
-              <span>Booked total:</span>
-              {[...totalsByCurrency.entries()].map(([currency, amount], i) => (
-                <span key={currency} className="font-medium text-foreground">
-                  {formatPrice(amount, currency)}
-                  {i < totalsByCurrency.size - 1 ? "," : ""}
-                </span>
-              ))}
-            </div>
-          )}
-
-          <div className="space-y-6">
-            {orderedGroups.map((group) => (
-              <section key={group.label}>
-                <h2 className="mb-2 text-sm font-medium text-muted-foreground">
-                  {group.label}
-                </h2>
-                <div className="space-y-3">
-                  {group.items.map((item) => (
-                    <BookingCard
-                      key={item.id}
-                      tripId={tripId}
-                      item={item}
-                      attachments={attachmentsByItem.get(item.id) ?? []}
-                    />
-                  ))}
-                </div>
-              </section>
-            ))}
-          </div>
-        </>
+        <div className="mt-7 flex flex-col gap-4">
+          {bookingItems.map((item) => (
+            <BookingStub
+              key={item.id}
+              tripId={tripId}
+              item={item}
+              dayLabel={dayLabelFor(item)}
+              attachments={attachmentsByItem.get(item.id) ?? []}
+            />
+          ))}
+        </div>
       )}
     </div>
-  );
-}
-
-function BookingCard({
-  tripId,
-  item,
-  attachments,
-}: {
-  tripId: string;
-  item: ItineraryItem;
-  attachments: AttachmentLink[];
-}) {
-  const time = formatTimeRange(item.start_time, item.end_time, item.all_day);
-  const price = formatPrice(item.price_amount, item.price_currency);
-
-  return (
-    <Card className="gap-2 py-4">
-      <CardContent className="px-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="gap-1">
-                <ItemTypeIcon type={item.type} />
-              </Badge>
-              <h3 className="truncate font-medium">{item.title}</h3>
-            </div>
-
-            {item.location_name && (
-              <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
-                <MapPin className="size-3.5 shrink-0" />
-                <span className="truncate">{item.location_name}</span>
-              </p>
-            )}
-
-            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
-              {item.url && (
-                <a
-                  href={item.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-primary underline"
-                >
-                  <ExternalLink className="size-3" />
-                  Booking link
-                </a>
-              )}
-              {attachments.map((file) => (
-                <a
-                  key={file.id}
-                  href={file.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-primary underline"
-                >
-                  <FileText className="size-3" />
-                  {file.fileName}
-                </a>
-              ))}
-            </div>
-          </div>
-
-          <div className="shrink-0 text-right text-sm">
-            {time && <p className="whitespace-nowrap">{time}</p>}
-            {price && (
-              <p className="mt-1 whitespace-nowrap font-medium">{price}</p>
-            )}
-          </div>
-        </div>
-
-        {item.day_id && (
-          <Link
-            href={`/trips/${tripId}/day/${item.day_id}`}
-            className="mt-2 inline-block text-xs text-muted-foreground underline"
-          >
-            View in itinerary
-          </Link>
-        )}
-      </CardContent>
-    </Card>
   );
 }
