@@ -47,6 +47,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
+        suppressHydrationWarning
         className={`${newsreader.variable} ${karla.variable} ${jetbrainsMono.variable} bg-background text-foreground flex min-h-dvh flex-col antialiased`}
       >
         <Script id="theme-init" strategy="beforeInteractive">
