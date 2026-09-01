@@ -27,7 +27,10 @@ export default async function MembersPage({
   const { data: profileRows } = await supabase
     .from("profiles")
     .select("id, display_name, email")
-    .in("id", userIds.length > 0 ? userIds : ["00000000-0000-0000-0000-000000000000"]);
+    .in(
+      "id",
+      userIds.length > 0 ? userIds : ["00000000-0000-0000-0000-000000000000"]
+    );
 
   const profilesById = new Map((profileRows ?? []).map((p) => [p.id, p]));
 
@@ -51,21 +54,28 @@ export default async function MembersPage({
     : { data: [] };
 
   return (
-    <div className="mx-auto w-full max-w-2xl p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-sm font-medium text-muted-foreground">
-          {members.length} {members.length === 1 ? "member" : "members"}
-        </h2>
+    <div className="mx-auto w-full max-w-2xl px-6 py-7 md:px-8">
+      <div className="border-border flex flex-wrap items-end justify-between gap-4 border-b pb-3.5">
+        <div>
+          <p className="eyebrow">
+            {members.length} {members.length === 1 ? "person" : "people"}
+          </p>
+          <h1 className="font-heading mt-0.5 text-[34px] leading-[1.1] font-medium tracking-[-0.02em]">
+            Who&rsquo;s coming
+          </h1>
+        </div>
         {isOwner && <InviteModal tripId={tripId} />}
       </div>
 
-      <MemberList
-        tripId={tripId}
-        members={members}
-        invites={invites ?? []}
-        currentUserId={user.id}
-        isOwner={isOwner}
-      />
+      <div className="mt-6">
+        <MemberList
+          tripId={tripId}
+          members={members}
+          invites={invites ?? []}
+          currentUserId={user.id}
+          isOwner={isOwner}
+        />
+      </div>
     </div>
   );
 }

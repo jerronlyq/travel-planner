@@ -2,11 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { formatDistanceToNow, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -30,6 +29,14 @@ type Invite = {
   role: TripRole;
   created_at: string;
 };
+
+const AVATAR_BG = [
+  "var(--brand)",
+  "var(--brand-alt)",
+  "var(--brand-third)",
+  "oklch(0.5 0.03 60)",
+  "oklch(0.6 0.13 70)",
+];
 
 export function MemberList({
   tripId,
@@ -102,27 +109,42 @@ export function MemberList({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        {members.map((member) => {
+    <div className="space-y-8">
+      <div className="border-border/70 border-t">
+        {members.map((member, i) => {
           const isLastOwner = member.role === "owner" && ownerCount <= 1;
           const isSelf = member.userId === currentUserId;
+          const name = member.displayName ?? member.email;
 
           return (
             <div
               key={member.userId}
-              className="flex items-center justify-between rounded-lg border p-3"
+              className="border-border/70 flex items-center gap-3 border-b py-3.5"
             >
-              <div>
-                <p className="font-medium">
-                  {member.displayName ?? member.email}
-                  {isSelf && <span className="text-muted-foreground"> (you)</span>}
+              <span
+                className="font-heading flex size-[42px] shrink-0 items-center justify-center rounded-full text-[17px] text-[oklch(0.98_0.01_85)]"
+                style={{ background: AVATAR_BG[i % AVATAR_BG.length] }}
+              >
+                {name.charAt(0).toUpperCase()}
+              </span>
+
+              <div className="min-w-0 flex-1">
+                <p className="font-heading text-[20px] leading-[1.2] tracking-[-0.01em]">
+                  {name}
+                  {isSelf && (
+                    <span className="text-muted-foreground font-sans text-[13px]">
+                      {" "}
+                      · you
+                    </span>
+                  )}
                 </p>
-                <p className="text-sm text-muted-foreground">{member.email}</p>
+                <p className="text-muted-foreground truncate text-[12.5px]">
+                  {member.email}
+                </p>
               </div>
 
               {isOwner ? (
-                <div className="flex items-center gap-2">
+                <div className="flex shrink-0 items-center gap-1.5">
                   <Select
                     value={member.role}
                     onValueChange={(v) =>
@@ -130,7 +152,7 @@ export function MemberList({
                     }
                     disabled={isLastOwner || pending === member.userId}
                   >
-                    <SelectTrigger className="w-28">
+                    <SelectTrigger className="hover:border-brand h-7 rounded-full border px-3 font-mono text-[10px] tracking-[0.1em] uppercase">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -139,20 +161,22 @@ export function MemberList({
                       <SelectItem value="viewer">Viewer</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    disabled={isLastOwner || pending === member.userId}
-                    onClick={() => handleRemove(member.userId)}
-                  >
-                    <X className="size-4" />
-                  </Button>
+                  {!isLastOwner && (
+                    <button
+                      type="button"
+                      aria-label={`Remove ${name}`}
+                      disabled={pending === member.userId}
+                      onClick={() => handleRemove(member.userId)}
+                      className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive inline-flex size-8 items-center justify-center rounded-full transition-colors disabled:opacity-50"
+                    >
+                      <X className="size-4" />
+                    </button>
+                  )}
                 </div>
               ) : (
-                <Badge variant="secondary" className="capitalize">
+                <span className="border-border shrink-0 rounded-full border px-3 py-1 font-mono text-[10px] tracking-[0.1em] uppercase">
                   {member.role}
-                </Badge>
+                </span>
               )}
             </div>
           );
@@ -161,30 +185,32 @@ export function MemberList({
 
       {isOwner && invites.length > 0 && (
         <div>
-          <h3 className="mb-2 text-sm font-medium text-muted-foreground">
-            Pending invites
-          </h3>
-          <div className="space-y-2">
+          <p className="data-label tracking-[0.12em]">Pending invites</p>
+          <div className="border-border mt-2 flex flex-col gap-3 rounded-[4px] border border-dashed p-4">
             {invites.map((invite) => (
               <div
                 key={invite.id}
-                className="flex items-center justify-between rounded-lg border border-dashed p-3"
+                className="flex items-center justify-between gap-3"
               >
-                <div>
-                  <p className="font-medium">{invite.email}</p>
-                  <p className="text-sm text-muted-foreground capitalize">
-                    {invite.role}
+                <div className="min-w-0">
+                  <p className="font-heading truncate text-[19px] tracking-[-0.01em]">
+                    {invite.email}
+                  </p>
+                  <p className="text-muted-foreground font-mono text-[10px] tracking-[0.08em] uppercase">
+                    {invite.role} · sent{" "}
+                    {formatDistanceToNow(parseISO(invite.created_at), {
+                      addSuffix: true,
+                    })}
                   </p>
                 </div>
-                <Button
+                <button
                   type="button"
-                  variant="ghost"
-                  size="sm"
                   disabled={pending === invite.id}
                   onClick={() => handleRevokeInvite(invite.id)}
+                  className="text-brand shrink-0 text-[12.5px] font-semibold underline underline-offset-2 disabled:opacity-50"
                 >
                   Revoke
-                </Button>
+                </button>
               </div>
             ))}
           </div>

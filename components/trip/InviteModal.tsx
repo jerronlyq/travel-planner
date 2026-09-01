@@ -96,10 +96,14 @@ export function InviteModal({ tripId }: { tripId: string }) {
         }
       }}
     >
-      <Button onClick={() => setOpen(true)} size="sm">
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="bg-brand press inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[13px] font-semibold tracking-[0.02em] text-[oklch(0.98_0.01_85)]"
+      >
         <UserPlus className="size-4" />
-        Invite
-      </Button>
+        Invite someone
+      </button>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Invite someone to this trip</DialogTitle>
