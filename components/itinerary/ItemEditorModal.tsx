@@ -71,7 +71,9 @@ export function ItemEditorModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{item ? "Edit item" : "Add item"}</DialogTitle>
+          <DialogTitle className="font-heading text-[22px] font-medium tracking-[-0.01em]">
+            {item ? "Edit stop" : "Add a stop"}
+          </DialogTitle>
         </DialogHeader>
 
         {/* Keyed by item id and mounted only while open, so form state is
@@ -201,9 +203,11 @@ function ItemEditorForm({
   const saving = create.isPending || update.isPending;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="type">Type</Label>
+    <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-1.5">
+            <Label htmlFor="type" className={LABEL}>
+              Type
+            </Label>
             <Select
               value={type}
               onValueChange={(v) => v && setType(v as ItineraryItemType)}
@@ -221,21 +225,26 @@ function ItemEditorForm({
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="title" className={LABEL}>
+              Title
+            </Label>
             <Input
               id="title"
               required
+              className="font-heading h-9 text-[18px]"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="location_name">Location</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="location_name" className={LABEL}>
+              Location
+            </Label>
             <PlaceSearchInput
               value={locationName}
-              placeholder="Search for a place..."
+              placeholder="Search for a place…"
               country={tripCountry}
               onChange={(v) => {
                 setLocationName(v);
@@ -251,8 +260,10 @@ function ItemEditorForm({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="location_address">Address</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="location_address" className={LABEL}>
+              Address
+            </Label>
             <Input
               id="location_address"
               value={locationAddress}
@@ -264,31 +275,37 @@ function ItemEditorForm({
             <input
               id="all_day"
               type="checkbox"
-              className="size-4"
+              className="accent-brand size-4"
               checked={allDay}
               onChange={(e) => setAllDay(e.target.checked)}
             />
-            <Label htmlFor="all_day" className="font-normal">
+            <Label htmlFor="all_day" className="text-[13px] font-normal">
               All day / no specific time
             </Label>
           </div>
 
           {!allDay && (
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="start_time">Start</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="start_time" className={LABEL}>
+                  Start
+                </Label>
                 <Input
                   id="start_time"
                   type="datetime-local"
+                  className="font-mono text-[13px]"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="end_time">End</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="end_time" className={LABEL}>
+                  End
+                </Label>
                 <Input
                   id="end_time"
                   type="datetime-local"
+                  className="font-mono text-[13px]"
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
                 />
@@ -297,24 +314,29 @@ function ItemEditorForm({
           )}
 
           <div className="grid grid-cols-[1fr_auto] gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="price_amount">Price (optional)</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="price_amount" className={LABEL}>
+                Price (optional)
+              </Label>
               <Input
                 id="price_amount"
                 type="number"
                 step="0.01"
                 min="0"
+                className="font-mono text-[13px]"
                 value={priceAmount}
                 onChange={(e) => setPriceAmount(e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="price_currency">Currency</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="price_currency" className={LABEL}>
+                Currency
+              </Label>
               <Select
                 value={priceCurrency}
                 onValueChange={(v) => v && setPriceCurrency(v)}
               >
-                <SelectTrigger id="price_currency" className="w-24">
+                <SelectTrigger id="price_currency" className="w-24 font-mono">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -328,19 +350,21 @@ function ItemEditorForm({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="url">Link</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="url" className={LABEL}>
+              Link
+            </Label>
             <Input
               id="url"
               type="url"
-              placeholder="https://..."
+              placeholder="https://…"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Attachments</Label>
+          <div className="space-y-1.5">
+            <Label className={LABEL}>Attachments</Label>
             {item ? (
               <AttachmentManager tripId={tripId} itemId={item.id} />
             ) : (
@@ -348,8 +372,10 @@ function ItemEditorForm({
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="notes" className={LABEL}>
+              Notes
+            </Label>
             <Textarea
               id="notes"
               rows={3}
@@ -372,9 +398,12 @@ function ItemEditorForm({
               <span />
             )}
             <Button type="submit" disabled={saving}>
-              {saving ? "Saving..." : isEditing ? "Save changes" : "Add item"}
+              {saving ? "Saving…" : isEditing ? "Save changes" : "Add stop"}
             </Button>
           </DialogFooter>
         </form>
   );
 }
+
+const LABEL =
+  "font-mono text-[10px] tracking-[0.14em] uppercase text-muted-foreground";
