@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -44,25 +45,22 @@ export function DeleteTripSection({
   }
 
   return (
-    <section className="space-y-3 rounded-lg border border-destructive/40 p-4">
-      <div>
-        <h2 className="text-lg font-semibold text-destructive">Danger zone</h2>
-        <p className="text-sm text-muted-foreground">
-          Deleting a trip removes every day, item, attachment record, and
-          member. This can&apos;t be undone.
-        </p>
-      </div>
-
-      <Button
+    <section className="flex flex-col gap-1.5">
+      <p className="text-muted-foreground max-w-[52ch] text-[13px] leading-[1.55]">
+        Deleting a trip removes every day, item, attachment record and member.
+        This can&rsquo;t be undone.
+      </p>
+      <button
         type="button"
-        variant="destructive"
         onClick={() => {
           setConfirmText("");
           setOpen(true);
         }}
+        className="text-destructive hover:text-destructive/80 inline-flex w-fit items-center gap-1.5 text-[13px] font-semibold underline underline-offset-2 transition-colors"
       >
-        Delete trip
-      </Button>
+        <Trash2 className="size-[14px]" />
+        Delete this trip
+      </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>

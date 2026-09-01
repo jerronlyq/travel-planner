@@ -2,23 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { differenceInCalendarDays, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { syncItineraryDays } from "@/lib/utils/itinerary-days";
 import { CURRENCIES } from "@/lib/utils/currency";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { UnderlineField } from "@/components/ui/underline-field";
 import { PlaceSearchInput } from "@/components/map/PlaceSearchInput";
+
+const UNDERLINE =
+  "h-[38px] rounded-none border-0 border-b-[1.5px] border-border bg-transparent px-0 text-[15px] focus-visible:border-brand focus-visible:ring-0";
 
 export default function NewTripPage() {
   const router = useRouter();
@@ -32,6 +25,11 @@ export default function NewTripPage() {
   const [currency, setCurrency] = useState("USD");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const dayCount =
+    startDate && endDate && endDate >= startDate
+      ? differenceInCalendarDays(parseISO(endDate), parseISO(startDate)) + 1
+      : 0;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -77,109 +75,129 @@ export default function NewTripPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-xl flex-1 p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>New trip</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Trip name</Label>
-              <Input
-                id="name"
-                required
-                placeholder="Japan 2027"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
+    <div className="mx-auto w-full max-w-xl flex-1 px-6 py-9 sm:px-8">
+      <p className="eyebrow text-brand">New trip</p>
+      <h1 className="font-heading mt-1 text-[38px] leading-[1.05] font-medium tracking-[-0.02em]">
+        Give it a name and a rough shape
+      </h1>
+      <p className="text-muted-foreground mt-2 text-[13.5px] leading-[1.55]">
+        Dates are optional — set them and the days lay themselves out.
+      </p>
 
-            <div className="space-y-2">
-              <Label htmlFor="destination">Destination</Label>
-              <PlaceSearchInput
-                value={destination}
-                placeholder="Search for a city or country..."
-                onChange={(v) => {
-                  setDestination(v);
-                  if (!v) {
-                    setCountryCode(null);
-                    setCountryName(null);
-                  }
-                }}
-                onSelect={(result) => {
-                  setDestination(result.fullAddress || result.name);
-                  setCountryCode(result.countryCode);
-                  setCountryName(result.countryName);
-                }}
-              />
-              {countryCode && (
-                <p className="text-muted-foreground text-xs">
-                  Item location search will be limited to{" "}
-                  <span className="text-foreground font-medium">
-                    {countryName ?? countryCode}
-                  </span>
-                  .
-                </p>
-              )}
-            </div>
+      <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-6">
+        <UnderlineField
+          label="Trip name"
+          required
+          placeholder="Japan 2027"
+          className="font-heading text-[21px]"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="start_date">Start date</Label>
-                <Input
-                  id="start_date"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="end_date">End date</Label>
-                <Input
-                  id="end_date"
-                  type="date"
-                  min={startDate || undefined}
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                />
-              </div>
-            </div>
+        <div className="flex flex-col gap-1">
+          <span className="font-mono text-muted-foreground text-[10px] tracking-[0.14em] uppercase">
+            Destination
+          </span>
+          <PlaceSearchInput
+            value={destination}
+            placeholder="Search for a city or country…"
+            inputClassName={UNDERLINE}
+            onChange={(v) => {
+              setDestination(v);
+              if (!v) {
+                setCountryCode(null);
+                setCountryName(null);
+              }
+            }}
+            onSelect={(result) => {
+              setDestination(result.fullAddress || result.name);
+              setCountryCode(result.countryCode);
+              setCountryName(result.countryName);
+            }}
+          />
+          {countryCode && (
+            <p className="text-muted-foreground text-[12px]">
+              Item location search will be limited to{" "}
+              <span className="text-foreground font-medium">
+                {countryName ?? countryCode}
+              </span>
+              .
+            </p>
+          )}
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="currency">Default currency</Label>
-              <Select value={currency} onValueChange={(v) => v && setCurrency(v)}>
-                <SelectTrigger id="currency" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CURRENCIES.map((code) => (
-                    <SelectItem key={code} value={code}>
-                      {code}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        <div className="grid grid-cols-2 gap-5">
+          <UnderlineField
+            label="Start date"
+            type="date"
+            className="font-mono text-[14px]"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+          <UnderlineField
+            label="End date"
+            type="date"
+            min={startDate || undefined}
+            className="font-mono text-[14px]"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                rows={3}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </div>
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor="currency"
+            className="font-mono text-muted-foreground text-[10px] tracking-[0.14em] uppercase"
+          >
+            Default currency
+          </label>
+          <select
+            id="currency"
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+            className="border-border focus:border-brand h-[38px] w-full appearance-none border-b-[1.5px] bg-transparent font-mono text-[14px] outline-none"
+          >
+            {CURRENCIES.map((code) => (
+              <option key={code} value={code}>
+                {code}
+              </option>
+            ))}
+          </select>
+        </div>
 
-            {error && <p className="text-sm text-destructive">{error}</p>}
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor="description"
+            className="font-mono text-muted-foreground text-[10px] tracking-[0.14em] uppercase"
+          >
+            Description
+          </label>
+          <textarea
+            id="description"
+            rows={3}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="border-border focus:border-brand w-full resize-none border-b-[1.5px] bg-transparent py-1 text-[15px] leading-[1.55] outline-none"
+          />
+        </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating..." : "Create trip"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+        {error && <p className="text-destructive text-[13px]">{error}</p>}
+
+        <div className="mt-2 flex flex-wrap items-center gap-4">
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-primary text-primary-foreground press inline-flex h-11 items-center gap-1.5 rounded-full px-5 text-[14px] font-semibold tracking-[0.02em] disabled:opacity-60"
+          >
+            {loading ? "Creating…" : "Create the trip →"}
+          </button>
+          {dayCount > 0 && (
+            <span className="font-mono text-muted-foreground text-[10px] tracking-[0.14em] uppercase">
+              {dayCount} {dayCount === 1 ? "day" : "days"} will be laid out
+            </span>
+          )}
+        </div>
+      </form>
     </div>
   );
 }

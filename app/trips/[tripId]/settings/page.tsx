@@ -32,21 +32,33 @@ export default async function TripSettingsPage({
   if (membership?.role !== "owner") redirect(`/trips/${tripId}/overview`);
 
   return (
-    <div className="mx-auto w-full max-w-xl space-y-10 p-6">
-      <TripSettingsForm
-        trip={{
-          id: trip.id,
-          name: trip.name,
-          destination: trip.destination,
-          description: trip.description,
-          start_date: trip.start_date,
-          end_date: trip.end_date,
-          timezone: trip.timezone,
-          country_code: trip.country_code,
-          default_currency: trip.default_currency,
-        }}
-      />
-      <DeleteTripSection tripId={trip.id} tripName={trip.name} />
+    <div className="mx-auto w-full max-w-2xl px-6 py-7 md:px-8">
+      <div className="border-border border-b pb-3.5">
+        <p className="eyebrow">{trip.name}</p>
+        <h1 className="font-heading mt-0.5 text-[32px] leading-[1.1] font-medium tracking-[-0.02em]">
+          The details
+        </h1>
+      </div>
+
+      <div className="mt-6">
+        <TripSettingsForm
+          trip={{
+            id: trip.id,
+            name: trip.name,
+            destination: trip.destination,
+            description: trip.description,
+            start_date: trip.start_date,
+            end_date: trip.end_date,
+            timezone: trip.timezone,
+            country_code: trip.country_code,
+            default_currency: trip.default_currency,
+          }}
+        />
+      </div>
+
+      <div className="border-border/70 mt-10 border-t pt-6">
+        <DeleteTripSection tripId={trip.id} tripName={trip.name} />
+      </div>
     </div>
   );
 }

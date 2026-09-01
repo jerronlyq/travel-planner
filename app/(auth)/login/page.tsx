@@ -3,10 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { UnderlineField } from "@/components/ui/underline-field";
 
 export default function LoginPage() {
   return (
@@ -44,44 +41,54 @@ function LoginForm() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Sign in</CardTitle>
-        <CardDescription>
-          Accounts are created by your trip&apos;s admin. Use the credentials
+    <div className="border-border bg-card shadow-soft grid overflow-hidden rounded-[6px] border md:grid-cols-[210px_1fr]">
+      {/* Photo panel — swap stripe-photo for a real image later */}
+      <div className="stripe-photo relative h-[140px] md:h-auto">
+        <span className="font-heading absolute top-4 left-4 text-[20px] italic text-[oklch(0.98_0.01_85)]">
+          Wanderplan
+        </span>
+      </div>
+
+      <div className="p-[38px] md:p-[46px]">
+        <h1 className="font-heading text-[34px] leading-[1.05] font-medium tracking-[-0.02em]">
+          Pick up where the trip left off
+        </h1>
+        <p className="text-muted-foreground mt-2 text-[13.5px] leading-[1.55]">
+          Accounts are created by your trip&rsquo;s admin. Use the credentials
           you were given, or the link from your invite email.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Signing in..." : "Sign in"}
-          </Button>
+        </p>
+
+        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-5">
+          <UnderlineField
+            label="Email"
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <UnderlineField
+            label="Password"
+            type="password"
+            autoComplete="current-password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+
+          {error && (
+            <p className="text-destructive text-[13px]">{error}</p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-primary text-primary-foreground press mt-1 inline-flex h-11 w-full items-center justify-center rounded-full text-[14px] font-semibold tracking-[0.02em] disabled:opacity-60"
+          >
+            {loading ? "Signing in…" : "Sign in"}
+          </button>
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

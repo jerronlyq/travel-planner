@@ -6,17 +6,6 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { syncItineraryDays } from "@/lib/utils/itinerary-days";
 import { CURRENCIES } from "@/lib/utils/currency";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { PlaceSearchInput } from "@/components/map/PlaceSearchInput";
 
 type TripSettings = {
@@ -35,6 +24,31 @@ const TIME_ZONES: string[] =
   typeof Intl.supportedValuesOf === "function"
     ? Intl.supportedValuesOf("timeZone")
     : [];
+
+const UNDERLINE =
+  "h-[36px] w-full rounded-none border-0 border-b-[1.5px] border-border bg-transparent px-0 text-[15px] outline-none transition-colors focus:border-brand focus-visible:border-brand focus-visible:ring-0";
+
+function Row({
+  label,
+  children,
+  hint,
+}: {
+  label: string;
+  children: React.ReactNode;
+  hint?: string;
+}) {
+  return (
+    <div className="border-border/70 grid gap-x-4 gap-y-1.5 border-b py-4 sm:grid-cols-[128px_1fr]">
+      <span className="font-mono text-muted-foreground pt-1.5 text-[10px] tracking-[0.14em] uppercase">
+        {label}
+      </span>
+      <div className="flex flex-col gap-1.5">
+        {children}
+        {hint && <p className="text-muted-foreground text-[12px]">{hint}</p>}
+      </div>
+    </div>
+  );
+}
 
 export function TripSettingsForm({ trip }: { trip: TripSettings }) {
   const router = useRouter();
@@ -103,127 +117,114 @@ export function TripSettingsForm({ trip }: { trip: TripSettings }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <h2 className="text-lg font-semibold">Trip settings</h2>
-
-      <div className="space-y-2">
-        <Label htmlFor="name">Trip name</Label>
-        <Input
-          id="name"
-          required
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="destination">Destination</Label>
-        <PlaceSearchInput
-          value={destination}
-          placeholder="Search for a city or country..."
-          onChange={(v) => {
-            setDestination(v);
-            if (!v) {
-              setCountryCode(null);
-              setCountryName(null);
-            }
-          }}
-          onSelect={(result) => {
-            setDestination(result.fullAddress || result.name);
-            setCountryCode(result.countryCode);
-            setCountryName(result.countryName);
-          }}
-        />
-        {countryCode ? (
-          <p className="text-muted-foreground text-xs">
-            Place search for items is limited to{" "}
-            <span className="text-foreground font-medium">
-              {countryName ?? countryCode}
-            </span>
-            . Clear the field to search worldwide.
-          </p>
-        ) : (
-          <p className="text-muted-foreground text-xs">
-            Pick a result from the list to limit item location search to that
-            country.
-          </p>
-        )}
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="start_date">Start date</Label>
-          <Input
-            id="start_date"
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
+    <form onSubmit={handleSubmit}>
+      <div className="border-border/70 border-t">
+        <Row label="Trip name">
+          <input
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className={`${UNDERLINE} font-heading text-[18px]`}
           />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="end_date">End date</Label>
-          <Input
-            id="end_date"
-            type="date"
-            min={startDate || undefined}
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
+        </Row>
+
+        <Row
+          label="Destination"
+          hint={
+            countryCode
+              ? `Item place search is limited to ${countryName ?? countryCode}. Clear the field to search worldwide.`
+              : "Pick a result from the list to limit item place search to that country."
+          }
+        >
+          <PlaceSearchInput
+            value={destination}
+            placeholder="Search for a city or country…"
+            inputClassName={UNDERLINE}
+            onChange={(v) => {
+              setDestination(v);
+              if (!v) {
+                setCountryCode(null);
+                setCountryName(null);
+              }
+            }}
+            onSelect={(result) => {
+              setDestination(result.fullAddress || result.name);
+              setCountryCode(result.countryCode);
+              setCountryName(result.countryName);
+            }}
           />
-        </div>
-      </div>
+        </Row>
 
-      <p className="text-xs text-muted-foreground">
-        Extending the dates adds the new days. Shortening the range leaves
-        existing days in place so nothing already planned is lost.
-      </p>
+        <Row
+          label="Dates"
+          hint="Extending the range adds days. Shortening it leaves existing days in place so nothing planned is lost."
+        >
+          <div className="flex items-center gap-3">
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className={`${UNDERLINE} font-mono text-[13px]`}
+            />
+            <span className="text-muted-foreground text-[13px]">to</span>
+            <input
+              type="date"
+              min={startDate || undefined}
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className={`${UNDERLINE} font-mono text-[13px]`}
+            />
+          </div>
+        </Row>
 
-      <div className="space-y-2">
-        <Label htmlFor="timezone">Time zone</Label>
-        <Input
-          id="timezone"
-          list={tzListId}
-          placeholder="e.g. Asia/Tokyo"
-          value={timezone}
-          onChange={(e) => setTimezone(e.target.value)}
-        />
-        <datalist id={tzListId}>
-          {TIME_ZONES.map((tz) => (
-            <option key={tz} value={tz} />
-          ))}
-        </datalist>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="currency">Default currency</Label>
-        <Select value={currency} onValueChange={(v) => v && setCurrency(v)}>
-          <SelectTrigger id="currency" className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {CURRENCIES.map((code) => (
-              <SelectItem key={code} value={code}>
-                {code}
-              </SelectItem>
+        <Row label="Time zone">
+          <input
+            list={tzListId}
+            placeholder="e.g. Asia/Tokyo"
+            value={timezone}
+            onChange={(e) => setTimezone(e.target.value)}
+            className={`${UNDERLINE} font-mono text-[13px]`}
+          />
+          <datalist id={tzListId}>
+            {TIME_ZONES.map((tz) => (
+              <option key={tz} value={tz} />
             ))}
-          </SelectContent>
-        </Select>
+          </datalist>
+        </Row>
+
+        <Row label="Currency">
+          <select
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+            className={`${UNDERLINE} appearance-none font-mono text-[13px]`}
+          >
+            {CURRENCIES.map((code) => (
+              <option key={code} value={code}>
+                {code}
+              </option>
+            ))}
+          </select>
+        </Row>
+
+        <Row label="Description">
+          <textarea
+            rows={3}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="border-border focus:border-brand w-full resize-none border-b-[1.5px] bg-transparent py-1 text-[15px] leading-[1.55] outline-none"
+          />
+        </Row>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          rows={3}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-      </div>
+      {error && <p className="text-destructive mt-4 text-[13px]">{error}</p>}
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
-
-      <Button type="submit" disabled={saving}>
-        {saving ? "Saving..." : "Save changes"}
-      </Button>
+      <button
+        type="submit"
+        disabled={saving}
+        className="bg-primary text-primary-foreground press mt-5 inline-flex h-10 items-center rounded-full px-5 text-[13.5px] font-semibold tracking-[0.02em] disabled:opacity-60"
+      >
+        {saving ? "Saving…" : "Save changes"}
+      </button>
     </form>
   );
 }

@@ -3,16 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { UnderlineField } from "@/components/ui/underline-field";
 
 export default function SetPasswordPage() {
   const router = useRouter();
@@ -41,34 +32,37 @@ export default function SetPasswordPage() {
 
   return (
     <div className="flex flex-1 items-center justify-center p-6">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Set your password</CardTitle>
-          <CardDescription>
-            Choose a password for your account to finish signing in.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="password">New password</Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="new-password"
-                minLength={8}
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Saving..." : "Save password"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      <div className="border-border bg-card shadow-soft w-full max-w-sm rounded-[6px] border p-[38px]">
+        <p className="eyebrow">Almost there</p>
+        <h1 className="font-heading mt-1 text-[28px] leading-[1.1] font-medium tracking-[-0.02em]">
+          Set your password
+        </h1>
+        <p className="text-muted-foreground mt-2 text-[13.5px] leading-[1.55]">
+          Choose a password to finish signing in.
+        </p>
+
+        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-5">
+          <UnderlineField
+            label="New password"
+            type="password"
+            autoComplete="new-password"
+            minLength={8}
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+
+          {error && <p className="text-destructive text-[13px]">{error}</p>}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-primary text-primary-foreground press mt-1 inline-flex h-11 w-full items-center justify-center rounded-full text-[14px] font-semibold tracking-[0.02em] disabled:opacity-60"
+          >
+            {loading ? "Saving…" : "Save password"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

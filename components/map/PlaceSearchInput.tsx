@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { searchPlaces, type GeocodeResult } from "@/lib/mapbox/geocode";
 
 export function PlaceSearchInput({
@@ -11,6 +12,7 @@ export function PlaceSearchInput({
   onSelect,
   placeholder,
   country,
+  inputClassName,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -18,6 +20,7 @@ export function PlaceSearchInput({
   placeholder?: string;
   // ISO 3166-1 alpha-2 — restricts suggestions to that country.
   country?: string | null;
+  inputClassName?: string;
 }) {
   const [results, setResults] = useState<GeocodeResult[]>([]);
   const [open, setOpen] = useState(false);
@@ -55,6 +58,7 @@ export function PlaceSearchInput({
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => results.length > 0 && setOpen(true)}
         autoComplete="off"
+        className={cn(inputClassName)}
       />
       {open && (
         <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md">
