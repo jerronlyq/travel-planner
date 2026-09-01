@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { TripSettingsForm } from "@/components/trip/TripSettingsForm";
+import { CoverImageField } from "@/components/trip/CoverImageField";
 import { DeleteTripSection } from "@/components/trip/DeleteTripSection";
 
 export default async function TripSettingsPage({
@@ -31,6 +32,12 @@ export default async function TripSettingsPage({
 
   if (membership?.role !== "owner") redirect(`/trips/${tripId}/overview`);
 
+  const { data: coverSigned } = trip.cover_photo_path
+    ? await supabase.storage
+        .from("trip-photos")
+        .createSignedUrl(trip.cover_photo_path, 3600)
+    : { data: null };
+
   return (
     <div className="mx-auto w-full max-w-2xl px-6 py-7 md:px-8">
       <div className="border-border border-b pb-3.5">
@@ -40,7 +47,18 @@ export default async function TripSettingsPage({
         </h1>
       </div>
 
-      <div className="mt-6">
+      <div className="border-border/70 mt-6 grid gap-x-4 gap-y-2 border-y py-4 sm:grid-cols-[128px_1fr]">
+        <span className="font-mono text-muted-foreground pt-1.5 text-[10px] tracking-[0.14em] uppercase">
+          Cover photo
+        </span>
+        <CoverImageField
+          tripId={trip.id}
+          currentPath={trip.cover_photo_path}
+          currentUrl={coverSigned?.signedUrl ?? null}
+        />
+      </div>
+
+      <div className="mt-2">
         <TripSettingsForm
           trip={{
             id: trip.id,

@@ -14,6 +14,7 @@ export function TripHeader({
   endDate,
   dayCount,
   canEdit,
+  coverUrl,
 }: {
   tripId: string;
   name: string;
@@ -22,6 +23,7 @@ export function TripHeader({
   endDate: string | null;
   dayCount: number;
   canEdit: boolean;
+  coverUrl?: string | null;
 }) {
   const dates = formatDateRangeShort(startDate, endDate);
   const kicker = [destination, dayCount > 0 ? `${dayCount} days` : null, dates]
@@ -29,13 +31,24 @@ export function TripHeader({
     .join(" — ");
 
   return (
-    <div className="stripe-photo relative h-40 md:h-[216px]">
-      {/* Replace stripe-photo with the trip cover image once available. */}
+    <div
+      className={`relative h-40 overflow-hidden md:h-[216px] ${coverUrl ? "" : "stripe-photo"}`}
+    >
+      {coverUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={coverUrl}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      )}
       <div className="absolute inset-0 bg-gradient-to-b from-[oklch(0.28_0.05_50/0.15)] to-[oklch(0.28_0.05_50/0.66)]" />
 
-      <span className="font-mono absolute top-4 right-8 hidden text-[9px] tracking-[0.08em] text-[oklch(0.97_0.01_85/0.8)] md:inline">
-        Photo — destination banner
-      </span>
+      {!coverUrl && (
+        <span className="font-mono absolute top-4 right-8 hidden text-[9px] tracking-[0.08em] text-[oklch(0.97_0.01_85/0.8)] md:inline">
+          Photo — destination banner
+        </span>
+      )}
 
       <div className="absolute inset-x-4 bottom-5 flex items-end justify-between gap-5 sm:inset-x-8">
         <div className="min-w-0 text-[oklch(0.98_0.01_85)]">

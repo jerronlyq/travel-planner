@@ -10,7 +10,13 @@ function status(trip: Trip): string {
   return "Upcoming";
 }
 
-export function TripCard({ trip }: { trip: Trip }) {
+export function TripCard({
+  trip,
+  coverUrl,
+}: {
+  trip: Trip;
+  coverUrl?: string | null;
+}) {
   const dates =
     trip.start_date && trip.end_date
       ? `${format(parseISO(trip.start_date), "MMM d")} – ${format(parseISO(trip.end_date), "d")}`
@@ -21,9 +27,17 @@ export function TripCard({ trip }: { trip: Trip }) {
       href={`/trips/${trip.id}`}
       className="group focus-visible:ring-ring/50 flex flex-col gap-3 rounded-[3px] outline-none transition-transform duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)] focus-visible:ring-2 focus-visible:ring-offset-4 focus-visible:ring-offset-background motion-safe:hover:-translate-y-1"
     >
-      {/* Photo slot — swap the stripe-photo utility for the trip's cover image.
-          Deliberately not a grey box: it reads as "add a photo here". */}
-      <div className="stripe-photo shadow-lift relative h-[194px] rounded-[3px]">
+      <div
+        className={`${coverUrl ? "" : "stripe-photo"} shadow-lift relative h-[194px] overflow-hidden rounded-[3px]`}
+      >
+        {coverUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={coverUrl}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[oklch(0.3_0.05_50/0.45)]" />
 
         {/* Scrapbook tape */}
@@ -33,9 +47,11 @@ export function TripCard({ trip }: { trip: Trip }) {
           {status(trip)}
         </span>
 
-        <span className="font-mono absolute bottom-[11px] left-3 text-[9px] tracking-[0.08em] text-[oklch(0.97_0.01_85/0.85)]">
-          Photo — hero shot
-        </span>
+        {!coverUrl && (
+          <span className="font-mono absolute bottom-[11px] left-3 text-[9px] tracking-[0.08em] text-[oklch(0.97_0.01_85/0.85)]">
+            Photo — hero shot
+          </span>
+        )}
       </div>
 
       <div className="flex flex-col gap-[3px]">

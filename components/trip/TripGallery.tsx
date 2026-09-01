@@ -17,7 +17,13 @@ function isPast(trip: Trip): boolean {
   return isBefore(parseISO(trip.start_date), new Date());
 }
 
-export function TripGallery({ trips }: { trips: Trip[] }) {
+export function TripGallery({
+  trips,
+  covers = {},
+}: {
+  trips: Trip[];
+  covers?: Record<string, string>;
+}) {
   const [filter, setFilter] = useState<Filter>("All");
 
   const inProgress = trips.filter((t) => t.start_date && t.end_date).length;
@@ -83,7 +89,7 @@ export function TripGallery({ trips }: { trips: Trip[] }) {
       ) : (
         <div className="mt-7 grid grid-cols-2 gap-[22px] md:grid-cols-3 xl:grid-cols-4">
           {visible.map((trip) => (
-            <TripCard key={trip.id} trip={trip} />
+            <TripCard key={trip.id} trip={trip} coverUrl={covers[trip.id]} />
           ))}
         </div>
       )}

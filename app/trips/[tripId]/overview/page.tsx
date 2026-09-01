@@ -25,11 +25,19 @@ export default async function TripOverviewPage({
 
   const { data: trip } = await supabase
     .from("trips")
-    .select("id, name, description, destination, start_date, end_date")
+    .select(
+      "id, name, description, destination, start_date, end_date, cover_photo_path"
+    )
     .eq("id", tripId)
     .single();
 
   if (!trip) notFound();
+
+  const { data: coverSigned } = trip.cover_photo_path
+    ? await supabase.storage
+        .from("trip-photos")
+        .createSignedUrl(trip.cover_photo_path, 3600)
+    : { data: null };
 
   const { data: membership } = user
     ? await supabase
@@ -100,6 +108,7 @@ export default async function TripOverviewPage({
         endDate={trip.end_date}
         dayCount={days?.length ?? 0}
         canEdit={canEdit}
+        coverUrl={coverSigned?.signedUrl ?? null}
       />
 
       <div className="mx-auto w-full max-w-5xl px-6 py-8 md:px-8">
