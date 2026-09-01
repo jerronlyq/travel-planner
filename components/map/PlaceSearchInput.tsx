@@ -28,7 +28,7 @@ export function PlaceSearchInput({
 
   useEffect(() => {
     const timeout = setTimeout(async () => {
-      if (!value.trim()) {
+      if (value.trim().length < 3) {
         setResults([]);
         setOpen(false);
         return;

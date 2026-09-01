@@ -39,7 +39,9 @@ export async function searchPlaces(
     );
     return [];
   }
-  if (!query.trim()) return [];
+  // Below 3 characters Mapbox's suggestions are noise anyway, and it's
+  // needless quota burn against a per-keystroke debounce.
+  if (query.trim().length < 3) return [];
 
   const url = new URL("https://api.mapbox.com/search/geocode/v6/forward");
   url.searchParams.set("q", query);
