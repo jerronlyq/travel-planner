@@ -60,7 +60,10 @@ export function TimelineItem({
 
       <div className="flex items-baseline gap-2.5">
         {time && (
-          <span className="text-muted-foreground font-mono text-[11px] tracking-[0.06em]">
+          <span
+            className="text-muted-foreground font-mono text-[11px] tracking-[0.06em]"
+            suppressHydrationWarning
+          >
             {time}
           </span>
         )}
