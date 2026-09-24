@@ -6,11 +6,15 @@ export type GeocodeResult = {
   lng: number;
   countryCode: string | null;
   countryName: string | null;
+  // Short category label for the dropdown ("hotel", "street", "place"…).
+  kind?: string | null;
+  source?: "mapbox" | "osm";
 };
 
 type MapboxFeature = {
   properties: {
     mapbox_id?: string;
+    feature_type?: string;
     name: string;
     full_address?: string;
     place_formatted?: string;
@@ -26,6 +30,7 @@ type SearchOptions = {
   country?: string | null;
   // "lng,lat" to bias results toward a location without filtering.
   proximity?: string | null;
+  signal?: AbortSignal;
 };
 
 export async function searchPlaces(
@@ -57,9 +62,11 @@ export async function searchPlaces(
 
   let res: Response;
   try {
-    res = await fetch(url.toString());
+    res = await fetch(url.toString(), { signal: options.signal });
   } catch (err) {
-    console.error("[geocode] request failed", err);
+    if ((err as Error).name !== "AbortError") {
+      console.error("[geocode] request failed", err);
+    }
     return [];
   }
 
@@ -83,5 +90,7 @@ export async function searchPlaces(
     lng: f.properties.coordinates.longitude,
     countryCode: f.properties.context?.country?.country_code?.toUpperCase() ?? null,
     countryName: f.properties.context?.country?.name ?? null,
+    kind: f.properties.feature_type ?? null,
+    source: "mapbox" as const,
   }));
 }

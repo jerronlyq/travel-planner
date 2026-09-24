@@ -89,6 +89,10 @@ export function DayView({
 
   const parsed = parseISO(dayDate);
 
+  // Bias place search toward wherever today's other stops already are.
+  const anchor = items.find((it) => it.lat !== null && it.lng !== null);
+  const proximity = anchor ? `${anchor.lng},${anchor.lat}` : null;
+
   return (
     <div className="flex flex-col">
       <header className="border-border flex items-start justify-between gap-4 border-b px-6 py-5 md:px-8">
@@ -185,6 +189,7 @@ export function DayView({
           createdBy={createdBy}
           defaultCurrency={defaultCurrency}
           tripCountry={tripCountry}
+          proximity={proximity}
           item={activeItem}
         />
       )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ExternalLink, Loader2, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -24,6 +25,7 @@ import { ITEM_TYPE_LABELS, ItemTypeIcon } from "@/components/itinerary/ItemTypeI
 import { CURRENCIES } from "@/lib/utils/currency";
 import { cn } from "@/lib/utils";
 import { PlaceSearchInput } from "@/components/map/PlaceSearchInput";
+import { findBestMatch } from "@/lib/geo/search";
 import { AttachmentManager } from "@/components/attachments/AttachmentManager";
 import { StagedAttachments } from "@/components/attachments/StagedAttachments";
 import { uploadItemAttachment } from "@/lib/hooks/use-item-attachments";
@@ -57,6 +59,7 @@ export function ItemEditorModal({
   createdBy,
   defaultCurrency,
   tripCountry,
+  proximity = null,
   item,
 }: {
   open: boolean;
@@ -66,6 +69,8 @@ export function ItemEditorModal({
   createdBy: string;
   defaultCurrency: string;
   tripCountry: string | null;
+  // "lng,lat" of another stop today — biases place suggestions nearby.
+  proximity?: string | null;
   item: ItineraryItem | null;
 }) {
   return (
@@ -87,6 +92,7 @@ export function ItemEditorModal({
             createdBy={createdBy}
             defaultCurrency={defaultCurrency}
             tripCountry={tripCountry}
+            proximity={proximity}
             item={item}
             onDone={() => onOpenChange(false)}
           />
@@ -102,6 +108,7 @@ function ItemEditorForm({
   createdBy,
   defaultCurrency,
   tripCountry,
+  proximity,
   item,
   onDone,
 }: {
@@ -110,6 +117,7 @@ function ItemEditorForm({
   createdBy: string;
   defaultCurrency: string;
   tripCountry: string | null;
+  proximity: string | null;
   item: ItineraryItem | null;
   onDone: () => void;
 }) {
@@ -122,6 +130,11 @@ function ItemEditorForm({
   const [locationAddress, setLocationAddress] = useState(item?.location_address ?? "");
   const [lat, setLat] = useState(item?.lat ?? null);
   const [lng, setLng] = useState(item?.lng ?? null);
+  // Which field produced the current pin — editing that field clears it.
+  const [pinSource, setPinSource] = useState<"place" | "address" | null>(
+    item?.lat != null && item?.lng != null ? "place" : null
+  );
+  const [locating, setLocating] = useState(false);
   const [allDay, setAllDay] = useState(item?.all_day ?? false);
   const [startTime, setStartTime] = useState(toLocalInputValue(item?.start_time ?? null));
   const [endTime, setEndTime] = useState(toLocalInputValue(item?.end_time ?? null));
@@ -136,17 +149,80 @@ function ItemEditorForm({
   const update = useUpdateItineraryItem(dayId);
   const remove = useDeleteItineraryItem(dayId);
 
+  const pinned = lat !== null && lng !== null;
+
+  // Geocode free text when nothing was picked: the address first (most
+  // precise), then the place name.
+  async function locateFromText() {
+    return findBestMatch(
+      [
+        { text: locationAddress, mode: "address" },
+        { text: locationName, mode: "poi" },
+      ],
+      {
+        country: tripCountry,
+        proximity,
+      }
+    );
+  }
+
+  async function handleFindOnMap() {
+    if (!locationAddress.trim() && !locationName.trim()) {
+      toast.error("Enter a location or an address first.");
+      return;
+    }
+    setLocating(true);
+    const hit = await locateFromText();
+    setLocating(false);
+    if (!hit) {
+      toast.error(
+        "Couldn't find that on the map. Check the spelling, or add more of the address (street, city)."
+      );
+      return;
+    }
+    setLat(hit.result.lat);
+    setLng(hit.result.lng);
+    setPinSource(hit.textIndex === 0 ? "address" : "place");
+    if (!locationAddress.trim()) setLocationAddress(hit.result.fullAddress);
+    toast.success(
+      `${hit.approximate ? "Pinned near" : "Pinned to"} ${hit.result.fullAddress}`
+    );
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    // Nothing picked from the dropdown? Fall back to the typed address.
+    let finalLat = lat;
+    let finalLng = lng;
+    let finalAddress = locationAddress;
+    let autoPinned: string | null = null;
+    let couldNotPin = false;
+    if (
+      (finalLat === null || finalLng === null) &&
+      (locationAddress.trim() || locationName.trim())
+    ) {
+      setLocating(true);
+      const hit = await locateFromText();
+      setLocating(false);
+      if (hit) {
+        finalLat = hit.result.lat;
+        finalLng = hit.result.lng;
+        if (!finalAddress.trim()) finalAddress = hit.result.fullAddress;
+        autoPinned = `${hit.approximate ? "Pinned near" : "Pinned to"} ${hit.result.fullAddress}`;
+      } else {
+        couldNotPin = true;
+      }
+    }
 
     const payload = {
       type,
       title,
       notes: notes || null,
       location_name: locationName || null,
-      location_address: locationAddress || null,
-      lat,
-      lng,
+      location_address: finalAddress || null,
+      lat: finalLat,
+      lng: finalLng,
       all_day: allDay,
       start_time: allDay ? null : fromLocalInputValue(startTime),
       end_time: allDay ? null : fromLocalInputValue(endTime),
@@ -184,6 +260,12 @@ function ItemEditorForm({
           toast.success("Item added");
         }
       }
+      if (autoPinned) toast(autoPinned);
+      if (couldNotPin) {
+        toast.warning(
+          "Saved, but couldn't find that location on the map. Edit the item to add a fuller address."
+        );
+      }
       onDone();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
@@ -201,7 +283,7 @@ function ItemEditorForm({
     }
   }
 
-  const saving = create.isPending || update.isPending;
+  const saving = create.isPending || update.isPending || locating;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
@@ -249,19 +331,26 @@ function ItemEditorForm({
               Location
             </Label>
             <PlaceSearchInput
+              mode="poi"
               value={locationName}
-              placeholder="Search for a place…"
+              placeholder="Search a place, e.g. Tokyo Tower"
               country={tripCountry}
+              proximity={proximity}
+              emptyHint="No place found. Enter the street address below and use “Find on map”."
               onChange={(v) => {
                 setLocationName(v);
-                setLat(null);
-                setLng(null);
+                if (pinSource === "place") {
+                  setLat(null);
+                  setLng(null);
+                  setPinSource(null);
+                }
               }}
               onSelect={(result) => {
                 setLocationName(result.name);
                 setLocationAddress(result.fullAddress);
                 setLat(result.lat);
                 setLng(result.lng);
+                setPinSource("place");
               }}
             />
           </div>
@@ -270,11 +359,78 @@ function ItemEditorForm({
             <Label htmlFor="location_address" className={LABEL}>
               Address
             </Label>
-            <Input
-              id="location_address"
+            <PlaceSearchInput
+              mode="address"
               value={locationAddress}
-              onChange={(e) => setLocationAddress(e.target.value)}
+              placeholder="Street address — used to pin it if the place isn't found"
+              country={tripCountry}
+              proximity={proximity}
+              emptyHint="No address found. Try adding the city or postcode."
+              onChange={(v) => {
+                setLocationAddress(v);
+                if (pinSource === "address") {
+                  setLat(null);
+                  setLng(null);
+                  setPinSource(null);
+                }
+              }}
+              onSelect={(result) => {
+                setLocationAddress(result.fullAddress);
+                setLat(result.lat);
+                setLng(result.lng);
+                setPinSource("address");
+              }}
             />
+
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-0.5">
+              {pinned ? (
+                <>
+                  <span className="text-brand inline-flex items-center gap-1 text-[12px] font-semibold">
+                    <MapPin className="size-3.5" />
+                    Pinned on the map
+                  </span>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-[12px] underline underline-offset-2"
+                  >
+                    <ExternalLink className="size-3" />
+                    Check location
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLat(null);
+                      setLng(null);
+                      setPinSource(null);
+                    }}
+                    className="text-muted-foreground hover:text-destructive text-[12px] underline underline-offset-2"
+                  >
+                    Remove pin
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="text-muted-foreground text-[12px]">
+                    Not on the map yet.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleFindOnMap}
+                    disabled={locating}
+                    className="border-border hover:border-brand inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px] font-semibold transition-colors disabled:opacity-50"
+                  >
+                    {locating ? (
+                      <Loader2 className="size-3 animate-spin" />
+                    ) : (
+                      <MapPin className="size-3" />
+                    )}
+                    Find on map
+                  </button>
+                </>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -404,7 +560,13 @@ function ItemEditorForm({
               <span />
             )}
             <Button type="submit" disabled={saving}>
-              {saving ? "Saving…" : isEditing ? "Save changes" : "Add stop"}
+              {locating
+                ? "Finding location…"
+                : saving
+                  ? "Saving…"
+                  : isEditing
+                    ? "Save changes"
+                    : "Add stop"}
             </Button>
           </DialogFooter>
         </form>
